@@ -48,7 +48,12 @@ def check_tracker_file():
 def download_file( next_batch ):
     """ Initiates production of marc file, then downloads it.
         Called by manage_download() """
-    return 'foo'
+    token = marc_helper.get_token()
+    marc_file_url = marc_helper.initiate_bibrange_request( token )
+    marc_helper.grab_file( token )
+    tracker_helper.update_tracker( next_batch )
+    log.debug( 'download complete' )
+    return
 
 
 

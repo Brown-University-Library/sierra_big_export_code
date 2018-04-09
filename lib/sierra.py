@@ -8,3 +8,9 @@ logging.basicConfig(
     )
 log = logging.getLogger(__name__)
 log.debug( 'loading sierra module' )
+
+
+class MarcHelper( object ):
+
+    def __init__( self ):
+        pass
