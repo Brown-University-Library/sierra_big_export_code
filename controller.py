@@ -5,6 +5,7 @@ SBE__ prefix for "Sierra Big Export"
 import datetime, json, logging, math, os, pprint, sys
 import requests
 from requests.auth import HTTPBasicAuth
+from lib.sierra import MarcHelper
 from lib.tracker import TrackerHelper
 
 logging.basicConfig(
@@ -19,6 +20,7 @@ log.debug( '\n-------\nstarting log' )
 if (sys.version_info < (3, 0)):
     raise Exception( 'forcing myself to use python3 always' )
 
+marc_helper = MarcHelper()
 tracker_helper = TrackerHelper()
 
 
@@ -27,7 +29,7 @@ def manage_download():
         Called by `if __name__ == '__main__':` """
     log.debug( 'starting' )
     tracker = check_tracker_file()
-    next_batch = get_next_batch( tracker )
+    next_batch = tracker_helper.get_next_batch( tracker )
     download_file( next_batch )
     log.debug( 'complete' )
     return
@@ -36,56 +38,17 @@ def manage_download():
 def check_tracker_file():
     """ Ensures file exists, is up-to-date, and contains last-bib and range-info.
         Called by manage_download() """
-    # tracker = grab_tracker_file()
     tracker = tracker_helper.grab_tracker_file()
-    # check_tracker_lastbib( tracker )
     tracker_helper.check_tracker_lastbib( tracker )
     tracker_helper.check_tracker_batches( tracker, start_bib=int('1000000'), end_bib=int(tracker['last_bib']) )
     log.debug( 'check_tracker_file() complete' )
     return tracker
 
 
-def check_tracker_batches( tracker, start_bib, end_bib ):
-    """ Checks for batches and creates them if they don't exist.
-        Called by check_tracker_file() """
-    TRACKER_FILEPATH = os.environ['SBE__TRACKER_JSON_PATH']
-    if tracker['batches']:
-        return
-    tracker = prepare_tracker_batches( tracker, start_bib, end_bib )
-    with open(TRACKER_FILEPATH, 'wb') as f:
-        f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
-    log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
-    return tracker
-
-
-def prepare_tracker_batches( tracker, start_bib, end_bib ):
-    """ Prepares the batches.
-        Called by check_tracker_batches() """
-    NUMBER_OF_CHUNKS = int( os.environ['SBE__NUMBER_OF_CHUNKS'] )
-    full_bib_range = end_bib - start_bib
-    chunk_number_of_bibs = math.ceil( full_bib_range / NUMBER_OF_CHUNKS )  # by rounding up the last batch will be sure to include the `end_bib`
-    ( chunk_start_bib, chunk_end_bib ) = ( start_bib, start_bib + chunk_number_of_bibs )
-    for i in range( 0, NUMBER_OF_CHUNKS ):
-        chunk_dct = { 'chunk_start_bib': chunk_start_bib, 'chunk_end_bib': chunk_end_bib, 'last_grabbed': None }
-        tracker['batches'].append( chunk_dct )
-        ( chunk_start_bib, chunk_end_bib ) = ( chunk_start_bib + chunk_number_of_bibs, chunk_end_bib + chunk_number_of_bibs )
-    tracker['last_updated'] = str( datetime.datetime.now() )
-    log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
-    return tracker
-
-
-def get_next_batch( tracker ):
-    """ Returns the next batch of bibs to grab.
+def download_file( next_batch ):
+    """ Initiates production of marc file, then downloads it.
         Called by manage_download() """
-    batch = None
-    for entry in tracker['batches']:
-        twentyfour_hours_ago = datetime.datetime.now() + datetime.timedelta( hours=-24 )
-        if entry['last_grabbed'] is None or entry['last_grabbed'] < twentyfour_hours_ago:
-            batch = entry
-            break
-    log.debug( 'batch, ```%s```' % pprint.pformat(batch) )
-    return batch
-
+    return 'foo'
 
 
 
