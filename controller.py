@@ -5,6 +5,7 @@ SBE__ prefix for "Sierra Big Export"
 import datetime, json, logging, math, os, pprint, sys
 import requests
 from requests.auth import HTTPBasicAuth
+from lib.tracker import TrackerHelper
 
 logging.basicConfig(
     filename=os.environ['SBE__LOG_PATH'],
@@ -17,6 +18,8 @@ log.debug( '\n-------\nstarting log' )
 
 if (sys.version_info < (3, 0)):
     raise Exception( 'forcing myself to use python3 always' )
+
+tracker_helper = TrackerHelper()
 
 
 def manage_download():
@@ -33,41 +36,12 @@ def manage_download():
 def check_tracker_file():
     """ Ensures file exists, is up-to-date, and contains last-bib and range-info.
         Called by manage_download() """
-    tracker = grab_tracker_file()
-    check_tracker_lastbib( tracker )
-    check_tracker_batches( tracker, start_bib=int('1000000'), end_bib=int(tracker['last_bib']) )
+    # tracker = grab_tracker_file()
+    tracker = tracker_helper.grab_tracker_file()
+    # check_tracker_lastbib( tracker )
+    tracker_helper.check_tracker_lastbib( tracker )
+    tracker_helper.check_tracker_batches( tracker, start_bib=int('1000000'), end_bib=int(tracker['last_bib']) )
     log.debug( 'check_tracker_file() complete' )
-    return tracker
-
-
-def grab_tracker_file():
-    """ Returns (creates if necessary) tracker from json file.
-        Called by check_tracker_file() """
-    TRACKER_FILEPATH = os.environ['SBE__TRACKER_JSON_PATH']
-    try:
-        with open(TRACKER_FILEPATH, 'rb') as f:
-            tracker = json.loads( f.read() )
-    except:
-        with open(TRACKER_FILEPATH, 'wb') as f:
-            tracker = {
-                'last_updated': str(datetime.datetime.now()), 'last_bib': None, 'batches': [] }
-            f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
-    log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
-    return tracker
-
-
-def check_tracker_lastbib( tracker):
-    """ Obtains last bib if it doesn't already exist.
-        Called by check_tracker_file() """
-    TRACKER_FILEPATH = os.environ['SBE__TRACKER_JSON_PATH']
-    LASTBIB_URL = os.environ['SBE__LASTBIB_URL']
-    if not tracker['last_bib']:
-        r = requests.get( LASTBIB_URL )
-        tracker['last_bib'] = r.json()['entries'][0]['id']
-        tracker['last_updated'] = str( datetime.datetime.now() )
-        with open(TRACKER_FILEPATH, 'wb') as f:
-            f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
-    log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
     return tracker
 
 
