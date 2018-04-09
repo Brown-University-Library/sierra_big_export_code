@@ -2,7 +2,7 @@
 SBE__ prefix for "Sierra Big Export"
 '''
 
-import datetime, logging, os, sys
+import datetime, json, logging, os, pprint, sys
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -40,7 +40,7 @@ def check_tracker_file():
 def grab_tracker_file():
     """ Returns (creates if necessary) tracker from json file.
         Called by check_tracker_file() """
-    TRACKER_FILEPATH = os.environ['SBE__TRACKER_FILEPATH']
+    TRACKER_FILEPATH = os.environ['SBE__TRACKER_JSON_PATH']
     try:
         with open(TRACKER_FILEPATH, 'rb') as f:
             tracker = json.loads( f.read() )
@@ -48,7 +48,7 @@ def grab_tracker_file():
         with open(TRACKER_FILEPATH, 'wb') as f:
             tracker = {
                 'last_updated': str(datetime.datetime.now()), 'last_bib': None, 'batches': None }
-            f.write( json.dumps(tracker, sort_keys=True, indent=2) )
+            f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
     log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
     return tracker
 
