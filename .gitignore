@@ -1,0 +1,6 @@
+*.pyc
+*pycache*
+.DS_Store
+.hg
+.svn
+env
