@@ -7,7 +7,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 logging.basicConfig(
-    # filename=os.environ['SBE__LOG_PATH'],
+    filename=os.environ['SBE__LOG_PATH'],
     level=logging.DEBUG,
     format='[%(asctime)s] %(levelname)s [%(module)s-%(funcName)s()::%(lineno)d] %(message)s',
     datefmt='%d/%b/%Y %H:%M:%S'
@@ -18,73 +18,80 @@ log.debug( '\n-------\nstarting standard log' )
 if (sys.version_info < (3, 0)):
     raise Exception( 'forcing myself to use python3 always' )
 
-API_ROOT_URL = os.environ['SBE__ROOT_URL']
-HTTPBASIC_KEY = os.environ['SBE__HTTPBASIC_USERNAME']
-HTTPBASIC_SECRET = os.environ['SBE__HTTPBASIC_PASSWORD']
-FILE_DOWNLOAD_DIR = os.environ['SBE__FILE_DOWNLOAD_DIR']
 
-## ok, let's get to work! ##
+def download_file():
+    log.debug( 'starting' )
 
-## get the token; looks like it's good for an hour
 
-token_url = '%stoken' % API_ROOT_URL
-log.debug( 'token_url, ```%s```' % token_url )
-r = requests.post( token_url, auth=HTTPBasicAuth(HTTPBASIC_KEY, HTTPBASIC_SECRET) )
-log.debug( 'token r.content, ```%s```' % r.content )
-token = r.json()['access_token']
-log.debug( 'token, ```%s```' % token )
+def stuff():
 
-# ===================================
-# make a bib-request, just as a test
-# ===================================
+    API_ROOT_URL = os.environ['SBE__ROOT_URL']
+    HTTPBASIC_KEY = os.environ['SBE__HTTPBASIC_USERNAME']
+    HTTPBASIC_SECRET = os.environ['SBE__HTTPBASIC_PASSWORD']
+    FILE_DOWNLOAD_DIR = os.environ['SBE__FILE_DOWNLOAD_DIR']
 
-bib_url = '%sbibs/' % API_ROOT_URL
-payload = { 'id': '1000001' }
-log.debug( 'token_url, ```%s```' % token_url )
-custom_headers = {'Authorization': 'Bearer %s' % token }
-r = requests.get( bib_url, headers=custom_headers, params=payload )
-log.debug( 'bib r.content, ```%s```' % r.content )
+    ## ok, let's get to work! ##
 
-# ===================================
-# get 'last' bib
-# ===================================
+    ## get the token; looks like it's good for an hour
 
-## ok, we have the first bib, let's get the last (hack, close to the last)
-"""
-TODO thought... there's probably a way to query the api to get this value.
-A hack, though, would be to run a cron job that would just get all the bibs over the last x/hours,
-and save the last one to a file at a specified location that the code below would load.
-"""
-log.debug( '\n-------\ngetting end-bib\n-------' )
-today_date = str( datetime.date.today() )
-start_datetime = '%sT00:00:00Z' % today_date
-end_datetime = '%sT23:59:59Z' % today_date
-payload = {
-    'limit': '1', 'createdDate': '[%s,%s]' % (start_datetime, end_datetime)  }
-r = requests.get( bib_url, headers=custom_headers, params=payload )
-log.debug( 'bib r.content, ```%s```' % r.content )
-end_bib = r.json()['entries'][0]['id']
-log.debug( 'end_bib, `%s`' % end_bib )
+    token_url = '%stoken' % API_ROOT_URL
+    log.debug( 'token_url, ```%s```' % token_url )
+    r = requests.post( token_url, auth=HTTPBasicAuth(HTTPBASIC_KEY, HTTPBASIC_SECRET) )
+    log.debug( 'token r.content, ```%s```' % r.content )
+    token = r.json()['access_token']
+    log.debug( 'token, ```%s```' % token )
 
-# ===================================
-# detour, grab range of marc records
-# ===================================
+    # ===================================
+    # make a bib-request, just as a test
+    # ===================================
 
-log.debug( '\n-------\ngetting small-range of marc records\n-------' )
-marc_url = '%sbibs/marc' % API_ROOT_URL
-payload = { 'id': '[1716554,1716564]' }  # i'll check these 10 records against the output of a saved-file, from this range, from the admin-corner script.
-r = requests.get( marc_url, headers=custom_headers, params=payload )
-log.debug( 'bib r.content, ```%s```' % r.content )
-file_url = r.json()['file']
-log.debug( 'file_url, ```%s```' % file_url )
+    bib_url = '%sbibs/' % API_ROOT_URL
+    payload = { 'id': '1000001' }
+    log.debug( 'token_url, ```%s```' % token_url )
+    custom_headers = {'Authorization': 'Bearer %s' % token }
+    r = requests.get( bib_url, headers=custom_headers, params=payload )
+    log.debug( 'bib r.content, ```%s```' % r.content )
 
-log.debug( '\n-------\ndownloading the marc file\n-------' )
-r = requests.get( file_url, headers=custom_headers )
-filepath = '%s/test.mrc' % FILE_DOWNLOAD_DIR
-with open(filepath, 'wb') as file_handler:
-    for chunk in r.iter_content( chunk_size=128 ):
-        file_handler.write( chunk )
-log.debug( 'file written to ```%s```' % filepath )
+    # ===================================
+    # get 'last' bib
+    # ===================================
+
+    ## ok, we have the first bib, let's get the last (hack, close to the last)
+    """
+    TODO thought... there's probably a way to query the api to get this value.
+    A hack, though, would be to run a cron job that would just get all the bibs over the last x/hours,
+    and save the last one to a file at a specified location that the code below would load.
+    """
+    log.debug( '\n-------\ngetting end-bib\n-------' )
+    today_date = str( datetime.date.today() )
+    start_datetime = '%sT00:00:00Z' % today_date
+    end_datetime = '%sT23:59:59Z' % today_date
+    payload = {
+        'limit': '1', 'createdDate': '[%s,%s]' % (start_datetime, end_datetime)  }
+    r = requests.get( bib_url, headers=custom_headers, params=payload )
+    log.debug( 'bib r.content, ```%s```' % r.content )
+    end_bib = r.json()['entries'][0]['id']
+    log.debug( 'end_bib, `%s`' % end_bib )
+
+    # ===================================
+    # detour, grab range of marc records
+    # ===================================
+
+    log.debug( '\n-------\ngetting small-range of marc records\n-------' )
+    marc_url = '%sbibs/marc' % API_ROOT_URL
+    payload = { 'id': '[1716554,1716564]' }  # i'll check these 10 records against the output of a saved-file, from this range, from the admin-corner script.
+    r = requests.get( marc_url, headers=custom_headers, params=payload )
+    log.debug( 'bib r.content, ```%s```' % r.content )
+    file_url = r.json()['file']
+    log.debug( 'file_url, ```%s```' % file_url )
+
+    log.debug( '\n-------\ndownloading the marc file\n-------' )
+    r = requests.get( file_url, headers=custom_headers )
+    filepath = '%s/test.mrc' % FILE_DOWNLOAD_DIR
+    with open(filepath, 'wb') as file_handler:
+        for chunk in r.iter_content( chunk_size=128 ):
+            file_handler.write( chunk )
+    log.debug( 'file written to ```%s```' % filepath )
 
 
 
@@ -124,6 +131,7 @@ def get_record_sets(record_range, testing=False, settings=None):
 
     log.debug( 'range_sets, ```%s```' % pprint.pformat(range_sets) )
     return range_sets
+
 
 if __name__ == "__main__":
     log.debug( 'download starting' )
