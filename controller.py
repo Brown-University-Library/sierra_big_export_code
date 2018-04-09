@@ -37,7 +37,7 @@ def check_tracker_file():
     check_tracker_lastbib( tracker )
     check_tracker_batches( tracker, start_bib=int('1000000'), end_bib=int(tracker['last_bib']) )
     log.debug( 'check_tracker_file() complete' )
-    return 'foo'
+    return tracker
 
 
 def grab_tracker_file():
@@ -100,47 +100,23 @@ def prepare_tracker_batches( tracker, start_bib, end_bib ):
     return tracker
 
 
-# def check_tracker_batches( tracker, start_bib, end_bib ):
-#     """ Checks for batches and creates them if they don't exist.
-#         Called by check_tracker_file() """
-#     NUMBER_OF_CHUNKS = int( os.environ['SBE__NUMBER_OF_CHUNKS'] )
-#     if tracker['batches']:
-#         return
-#     full_bib_range = end_bib - start_bib
-#     chunk_number_of_bibs = math.ceil( full_bib_range / NUMBER_OF_CHUNKS )  # by rounding up the last batch will be sure to include the `end_bib`
-#     ( chunk_start_bib, chunk_end_bib ) = ( start_bib, start_bib + chunk_number_of_bibs )
-#     for i in range( 0, NUMBER_OF_CHUNKS ):
-#         chunk_dct = { 'chunk_start_bib': chunk_start_bib, 'chunk_end_bib': chunk_end_bib, 'last_grabbed': None }
-#         tracker['batches'].append( chunk_dct )
-#         ( chunk_start_bib, chunk_end_bib ) = ( chunk_start_bib + chunk_number_of_bibs, chunk_end_bib + chunk_number_of_bibs )
-#     log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
-#     return tracker
-
-
-# def check_tracker_batches( tracker, start_bib, end_bib ):
-#     """ Checks for batches and creates them if they don't exist.
-#         Called by check_tracker_file() """
-#     NUMBER_OF_CHUNKS = int( os.environ['SBE__NUMBER_OF_CHUNKS'] )
-#     if tracker['batches']:
-#         return
-#     full_bib_range = end_bib - start_bib
-#     chunk_number_of_bibs = math.ceil( full_bib_range / NUMBER_OF_CHUNKS )  # by rounding up the last batch will be sure to include the `end_bib`
-#     log.debug( 'chunk_number_of_bibs, `%s`' % chunk_number_of_bibs )
-#     ( chunk_start_bib, chunk_end_bib ) = ( start_bib, start_bib + chunk_number_of_bibs )
-#     for i in range( 0, NUMBER_OF_CHUNKS ):
-#         chunk_dct = {}
-#         chunk_dct['chunk_start_bib'] = chunk_start_bib
-#         chunk_dct['chunk_end_bib'] = chunk_end_bib
-#         chunk_dct['last_grabbed'] = None
-#         tracker['batches'].append( chunk_dct )
-#         chunk_start_bib = chunk_start_bib + chunk_number_of_bibs
-#         chunk_end_bib = chunk_end_bib + chunk_number_of_bibs
-#     log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
-#     return tracker
+def get_next_batch( tracker ):
+    """ Returns the next batch of bibs to grab.
+        Called by manage_download() """
+    batch = None
+    for entry in tracker['batches']:
+        twentyfour_hours_ago = datetime.datetime.now() + datetime.timedelta( hours=-24 )
+        if entry['last_grabbed'] is None or entry['last_grabbed'] < twentyfour_hours_ago:
+            batch = entry
+            break
+    log.debug( 'batch, ```%s```' % pprint.pformat(batch) )
+    return batch
 
 
 
-### saved
+
+
+### saved older code ###
 
 def stuff():
 
