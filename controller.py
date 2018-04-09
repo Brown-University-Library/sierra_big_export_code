@@ -13,14 +13,27 @@ logging.basicConfig(
     datefmt='%d/%b/%Y %H:%M:%S'
     )
 log = logging.getLogger(__name__)
-log.debug( '\n-------\nstarting standard log' )
+log.debug( '\n-------\nstarting log' )
 
 if (sys.version_info < (3, 0)):
     raise Exception( 'forcing myself to use python3 always' )
 
 
-def download_file():
+def manage_download():
+    """ Controller function.
+        Called by `if __name__ == '__main__':` """
     log.debug( 'starting' )
+    tracker_file = check_tracker_file()
+    next_batch = get_next_batch()
+    download_file( next_batch )
+    log.debug( 'complete' )
+    return
+
+
+def check_tracker_file():
+    """ Ensures file exists, is up-to-date, and contains last-bib and range-info.
+        Called by manage_download() """
+    return 'foo'
 
 
 def stuff():
@@ -133,7 +146,7 @@ def get_record_sets(record_range, testing=False, settings=None):
     return range_sets
 
 
-if __name__ == "__main__":
-    log.debug( 'download starting' )
-    download_file()
-    log.debug( 'download complete' )
+if __name__ == '__main__':
+    log.debug( 'starting' )
+    manage_download()
+    log.debug( 'complete' )
