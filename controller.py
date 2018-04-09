@@ -34,6 +34,9 @@ def check_tracker_file():
     """ Ensures file exists, is up-to-date, and contains last-bib and range-info.
         Called by manage_download() """
     tracker = grab_tracker_file()
+    check_tracker_lastbib( tracker )
+    check_tracker_batches( tracker, start_bib=int('1000000'), end_bib=int(tracker['last_bib']) )
+    log.debug( 'check_tracker_file() complete' )
     return 'foo'
 
 
@@ -47,10 +50,47 @@ def grab_tracker_file():
     except:
         with open(TRACKER_FILEPATH, 'wb') as f:
             tracker = {
-                'last_updated': str(datetime.datetime.now()), 'last_bib': None, 'batches': None }
+                'last_updated': str(datetime.datetime.now()), 'last_bib': None, 'batches': [] }
             f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
     log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
     return tracker
+
+
+def check_tracker_lastbib( tracker):
+    """ Obtains last bib if it doesn't already exist.
+        Called by check_tracker_file() """
+    TRACKER_FILEPATH = os.environ['SBE__TRACKER_JSON_PATH']
+    LASTBIB_URL = os.environ['SBE__LASTBIB_URL']
+    if not tracker['last_bib']:
+        r = requests.get( LASTBIB_URL )
+        tracker['last_bib'] = r.json()['entries'][0]['id']
+        with open(TRACKER_FILEPATH, 'wb') as f:
+            f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
+    log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
+    return tracker
+
+
+def check_tracker_batches( tracker, start_bib, end_bib ):
+    """ Checks for batches and creates them if they don't exist.
+        Called by check_tracker_file() """
+    NUMBER_OF_CHUNKS = int( os.environ['SBE__NUMBER_OF_CHUNKS'] )
+    if tracker['batches']:
+        return
+    full_bib_range = end_bib - start_bib
+    chunk_number_of_bibs = int( full_bib_range / NUMBER_OF_CHUNKS )
+    log.debug( 'chunk_number_of_bibs, `%s`' % chunk_number_of_bibs )
+    ( chunk_start_bib, chunk_end_bib ) = ( start_bib, start_bib + chunk_number_of_bibs )
+    for i in range( 0, NUMBER_OF_CHUNKS ):
+        chunk_dct = {}
+        chunk_dct['chunk_start_bib'] = chunk_start_bib
+        chunk_dct['chunk_end_bib'] = chunk_end_bib
+        chunk_dct['last_grabbed'] = None
+        tracker['batches'].append( chunk_dct )
+        chunk_start_bib = chunk_start_bib + chunk_number_of_bibs
+        chunk_end_bib = chunk_end_bib + chunk_number_of_bibs
+    log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
+    return tracker
+
 
 
 ### saved
