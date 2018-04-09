@@ -23,8 +23,8 @@ def manage_download():
     """ Controller function.
         Called by `if __name__ == '__main__':` """
     log.debug( 'starting' )
-    tracker_file = check_tracker_file()
-    next_batch = get_next_batch()
+    tracker = check_tracker_file()
+    next_batch = get_next_batch( tracker )
     download_file( next_batch )
     log.debug( 'complete' )
     return
@@ -33,8 +33,27 @@ def manage_download():
 def check_tracker_file():
     """ Ensures file exists, is up-to-date, and contains last-bib and range-info.
         Called by manage_download() """
+    tracker = grab_tracker_file()
     return 'foo'
 
+
+def grab_tracker_file():
+    """ Returns (creates if necessary) tracker from json file.
+        Called by check_tracker_file() """
+    TRACKER_FILEPATH = os.environ['SBE__TRACKER_FILEPATH']
+    try:
+        with open(TRACKER_FILEPATH, 'rb') as f:
+            tracker = json.loads( f.read() )
+    except:
+        with open(TRACKER_FILEPATH, 'wb') as f:
+            tracker = {
+                'last_updated': str(datetime.datetime.now()), 'last_bib': None, 'batches': None }
+            f.write( json.dumps(tracker, sort_keys=True, indent=2) )
+    log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
+    return tracker
+
+
+### saved
 
 def stuff():
 
