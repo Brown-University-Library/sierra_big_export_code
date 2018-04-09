@@ -64,6 +64,7 @@ def check_tracker_lastbib( tracker):
     if not tracker['last_bib']:
         r = requests.get( LASTBIB_URL )
         tracker['last_bib'] = r.json()['entries'][0]['id']
+        tracker['last_updated'] = str( datetime.datetime.now() )
         with open(TRACKER_FILEPATH, 'wb') as f:
             f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
     log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
@@ -93,8 +94,8 @@ def prepare_tracker_batches( tracker, start_bib, end_bib ):
     for i in range( 0, NUMBER_OF_CHUNKS ):
         chunk_dct = { 'chunk_start_bib': chunk_start_bib, 'chunk_end_bib': chunk_end_bib, 'last_grabbed': None }
         tracker['batches'].append( chunk_dct )
-        chunk_start_bib = chunk_start_bib + chunk_number_of_bibs
-        chunk_end_bib = ( chunk_end_bib + chunk_number_of_bibs )
+        ( chunk_start_bib, chunk_end_bib ) = ( chunk_start_bib + chunk_number_of_bibs, chunk_end_bib + chunk_number_of_bibs )
+    tracker['last_updated'] = str( datetime.datetime.now() )
     log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
     return tracker
 
