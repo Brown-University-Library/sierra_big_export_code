@@ -81,4 +81,18 @@ class TrackerHelper( object ):
         log.debug( 'batch, ```%s```' % pprint.pformat(batch) )
         return batch
 
+    def update_tracker( self, batch, tracker ):
+        """ Updates current batch information.
+            Called by controller.download_file() """
+        log.debug( 'tracker initially, ```%s```' % pprint.pformat(tracker) )
+        for entry in tracker['batches']:
+            if entry['chunk_start_bib'] == batch['chunk_start_bib']:
+                entry['last_grabbed'] = str( datetime.datetime.now() )
+                tracker['last_updated'] = str( datetime.datetime.now() )
+                break
+        log.debug( 'tracker subsequently, ```%s```' % pprint.pformat(tracker) )
+        with open(self.TRACKER_FILEPATH, 'wb') as f:
+            f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
+        return
+
     ## end class class TrackerHelper()

@@ -30,7 +30,7 @@ def manage_download():
     log.debug( 'starting' )
     tracker = check_tracker_file()
     next_batch = tracker_helper.get_next_batch( tracker )
-    download_file( next_batch )
+    download_file( next_batch, tracker )
     log.debug( 'complete' )
     return
 
@@ -45,13 +45,13 @@ def check_tracker_file():
     return tracker
 
 
-def download_file( next_batch ):
+def download_file( next_batch, tracker ):
     """ Initiates production of marc file, then downloads it.
         Called by manage_download() """
     token = marc_helper.get_token()
     marc_file_url = marc_helper.initiate_bibrange_request( token, next_batch )
     marc_helper.grab_file( token, marc_file_url, next_batch['file_name'] )
-    tracker_helper.update_tracker( next_batch )
+    tracker_helper.update_tracker( next_batch, tracker )
     log.debug( 'download complete' )
     return
 
