@@ -17,6 +17,7 @@ class TrackerHelper( object ):
         self.TRACKER_FILEPATH = os.environ['SBE__TRACKER_JSON_PATH']
         self.LASTBIB_URL = os.environ['SBE__LASTBIB_URL']
         self.NUMBER_OF_CHUNKS = int( os.environ['SBE__NUMBER_OF_CHUNKS'] )
+        self.chunk_number_of_bibs = json.loads( os.environ['SBE__CHUNK_NUMBER_OF_BIBS_JSON'] )  # normally null -> None, or an int
 
     def grab_tracker_file( self ):
         """ Returns (creates if necessary) tracker from json file.
@@ -52,6 +53,21 @@ class TrackerHelper( object ):
         tracker = self.prepare_tracker_batches( tracker, start_bib, end_bib )
         with open(self.TRACKER_FILEPATH, 'wb') as f:
             f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
+        log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
+        return tracker
+
+    def prepare_tracker_batches( self, tracker, start_bib, end_bib ):
+        """ Prepares the batches.
+            Called by check_tracker_batches() """
+        full_bib_range = end_bib - start_bib
+        chunk_number_of_bibs = self.chunk_number_of_bibs if self.chunk_number_of_bibs else math.ceil( full_bib_range / self.NUMBER_OF_CHUNKS )  # by rounding up the last batch will be sure to include the `end_bib`
+        log.debug( 'chunk_number_of_bibs, `%s`' % chunk_number_of_bibs )
+        ( chunk_start_bib, chunk_end_bib ) = ( start_bib, start_bib + chunk_number_of_bibs )
+        for i in range( 0, self.NUMBER_OF_CHUNKS ):
+            chunk_dct = { 'chunk_start_bib': chunk_start_bib, 'chunk_end_bib': chunk_end_bib, 'last_grabbed': None, 'file_name': 'sierra_export_%s.mrc' % str(i).rjust( 2, '0' ) }
+            tracker['batches'].append( chunk_dct )
+            ( chunk_start_bib, chunk_end_bib ) = ( chunk_start_bib + chunk_number_of_bibs, chunk_end_bib + chunk_number_of_bibs )
+        tracker['last_updated'] = datetime.datetime.now().isoformat()
         log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
         return tracker
 
