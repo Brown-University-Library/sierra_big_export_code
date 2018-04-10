@@ -35,15 +35,13 @@ class MarcHelper( object ):
         """ Makes request that returns the marc file url.
             Called by controller.download_file() """
         log.debug( 'next_batch, ```%s```' % next_batch )
-        # start_bib = next_batch['chunk_start_bib']
-        # end_bib = next_batch['chunk_end_bib']
-        start_bib = 1000000
-        end_bib = 1000020
+        start_bib = next_batch['chunk_start_bib']
+        end_bib = next_batch['chunk_end_bib']
         marc_url = '%sbibs/marc' % self.API_ROOT_URL
         payload = { 'id': '[%s,%s]' % (start_bib, end_bib) }
         custom_headers = {'Authorization': 'Bearer %s' % token }
         r = requests.get( marc_url, headers=custom_headers, params=payload )
-        # log.debug( 'bib r.content, ```%s```' % r.content )
+        log.debug( 'bib r.content, ```%s```' % r.content )
         file_url = r.json()['file']
         log.debug( 'file_url, ```%s```' % file_url )
         return file_url
