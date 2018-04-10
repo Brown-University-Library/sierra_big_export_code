@@ -48,12 +48,12 @@ class MarcHelper( object ):
         log.debug( 'file_url, ```%s```' % file_url )
         return file_url
 
-    def grab_file( self, token, file_url ):
+    def grab_file( self, token, file_url, file_name ):
         """ Downloads file.
             Called by controller.download_file() """
         custom_headers = {'Authorization': 'Bearer %s' % token }
         r = requests.get( file_url, headers=custom_headers )
-        filepath = '%s/test.mrc' % self.FILE_DOWNLOAD_DIR
+        filepath = '%s/%s' % ( self.FILE_DOWNLOAD_DIR, file_name )
         with open(filepath, 'wb') as file_handler:
             for chunk in r.iter_content( chunk_size=128 ):
                 file_handler.write( chunk )

@@ -50,7 +50,7 @@ def download_file( next_batch ):
         Called by manage_download() """
     token = marc_helper.get_token()
     marc_file_url = marc_helper.initiate_bibrange_request( token, next_batch )
-    marc_helper.grab_file( token, marc_file_url )
+    marc_helper.grab_file( token, marc_file_url, next_batch['file_name'] )
     tracker_helper.update_tracker( next_batch )
     log.debug( 'download complete' )
     return
