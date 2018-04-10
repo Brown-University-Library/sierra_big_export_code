@@ -30,7 +30,10 @@ def manage_download():
     log.debug( 'starting' )
     tracker = check_tracker_file()
     next_batch = tracker_helper.get_next_batch( tracker )
-    download_file( next_batch, tracker )
+    if next_batch:
+        download_file( next_batch, tracker )
+    else:
+        log.debug( 'no next batch; quitting' )
     log.debug( 'complete' )
     return
 
