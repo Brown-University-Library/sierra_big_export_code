@@ -38,7 +38,7 @@ class TrackerHelper( object ):
         if not tracker['last_bib']:
             r = requests.get( self.LASTBIB_URL )
             tracker['last_bib'] = r.json()['entries'][0]['id']
-            tracker['last_updated'] = str( datetime.datetime.now() )
+            tracker['last_updated'] = datetime.datetime.now().isoformat()
             with open(self.TRACKER_FILEPATH, 'wb') as f:
                 f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
         log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
@@ -65,7 +65,7 @@ class TrackerHelper( object ):
             chunk_dct = { 'chunk_start_bib': chunk_start_bib, 'chunk_end_bib': chunk_end_bib, 'last_grabbed': None, 'file_name': 'sierra_export_%s.mrc' % str(i).rjust( 2, '0' ) }
             tracker['batches'].append( chunk_dct )
             ( chunk_start_bib, chunk_end_bib ) = ( chunk_start_bib + chunk_number_of_bibs, chunk_end_bib + chunk_number_of_bibs )
-        tracker['last_updated'] = str( datetime.datetime.now() )
+        tracker['last_updated'] = datetime.datetime.now().isoformat()
         log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
         return tracker
 
@@ -75,7 +75,8 @@ class TrackerHelper( object ):
         batch = None
         for entry in tracker['batches']:
             twentyfour_hours_ago = datetime.datetime.now() + datetime.timedelta( hours=-24 )
-            if entry['last_grabbed'] is None or entry['last_grabbed'] < twentyfour_hours_ago:
+            # if entry['last_grabbed'] is None or entry['last_grabbed'] < twentyfour_hours_ago:
+            if entry['last_grabbed'] is None or datetime.datetime.strptime( entry['last_grabbed'], '%Y-%m-%dT%H:%M:%S.%f' ) < twentyfour_hours_ago:  # the second 'or' condition converts the isoformat-date back into a date-object to be able to compare
                 batch = entry
                 break
         log.debug( 'batch, ```%s```' % pprint.pformat(batch) )
@@ -87,8 +88,8 @@ class TrackerHelper( object ):
         log.debug( 'tracker initially, ```%s```' % pprint.pformat(tracker) )
         for entry in tracker['batches']:
             if entry['chunk_start_bib'] == batch['chunk_start_bib']:
-                entry['last_grabbed'] = str( datetime.datetime.now() )
-                tracker['last_updated'] = str( datetime.datetime.now() )
+                entry['last_grabbed'] = datetime.datetime.now().isoformat()
+                tracker['last_updated'] = datetime.datetime.now().isoformat()
                 break
         log.debug( 'tracker subsequently, ```%s```' % pprint.pformat(tracker) )
         with open(self.TRACKER_FILEPATH, 'wb') as f:

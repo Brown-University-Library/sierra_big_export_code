@@ -42,7 +42,7 @@ custom_headers = {'Authorization': 'Bearer %s' % token }  # for use in subsequen
 
 log.debug( '\n-------\ngetting end-bib\n-------' )
 bib_url = '%sbibs/' % API_ROOT_URL
-today_date = str( datetime.date.today() )
+today_date = datetime.date.today().isoformat()
 start_datetime = '%sT00:00:00Z' % today_date
 end_datetime = '%sT23:59:59Z' % today_date
 payload = {
@@ -81,7 +81,7 @@ elif stored_lastbib:
         keep_flag = False
 if not keep_flag:
     with open( LASTBIB_JSON_PATH, 'w+' ) as f:
-        api_lastbib_data['updated_with_api_data'] = str( datetime.datetime.now() )
+        api_lastbib_data['updated_with_api_data'] = datetime.datetime.now().isoformat()
         f.write( json.dumps(api_lastbib_data, sort_keys=True, indent=2) )
     log.debug( 'overwrite successful' )
 else:
