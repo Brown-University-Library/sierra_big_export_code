@@ -59,11 +59,13 @@ class TrackerHelper( object ):
     def prepare_tracker_batches( self, tracker, start_bib, end_bib ):
         """ Prepares the batches.
             Called by check_tracker_batches() """
-        ( chunk_start_bib, chunk_end_bib, file_count ) = ( start_bib, start_bib + 2000, 0 )  # 2000 is api-limit
+        # ( chunk_start_bib, chunk_end_bib, file_count ) = ( start_bib, start_bib + 2000, 0 )  # 2000 is api-limit
+        ( chunk_start_bib, file_count ) = ( start_bib, 0 )
+        chunk_end_bib = start_bib + 2000 if self.chunk_number_of_bibs is None else start_bib + self.chunk_number_of_bibs
         while chunk_start_bib < end_bib:
             chunk_dct = { 'chunk_start_bib': chunk_start_bib, 'chunk_end_bib': chunk_end_bib, 'last_grabbed': None, 'file_name': 'sierra_export_%s.mrc' % str(file_count).rjust( 4, '0' ) }
             tracker['batches'].append( chunk_dct )
-            chunk_start_bib += 2000
+            chunk_start_bib += 2000  # 2000 is api-limit
             chunk_end_bib += 2000
             file_count += 1
         tracker['last_updated'] = datetime.datetime.now().isoformat()
