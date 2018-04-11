@@ -1,4 +1,4 @@
-import json, logging, os
+import json, logging, os, time
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -35,6 +35,20 @@ class MarcHelper( object ):
     def initiate_bibrange_request( self, token, next_batch ):
         """ Makes request that returns the marc file url.
             Called by controller.download_file() """
+        try:
+            file_url = self.make_bibrange_request( token, next_batch )
+            return file_url
+        except Exception as e:
+            log.error( 'exception, ```%s```' % e )
+            time.sleep( 10 )
+            try:
+                file_url = self.make_bibrange_request( token, next_batch )
+                return file_url
+            except Exception as e:
+                log.error( '2nd exception, ```%s```; quitting' % e )
+                sys.exit()
+
+    def make_bibrange_request( self, token, next_batch ):
         start_bib = next_batch['chunk_start_bib']
         end_bib = next_batch['chunk_end_bib'] if self.chunk_number_of_bibs is None else start_bib + self.chunk_number_of_bibs
         # end_bib = next_batch['chunk_end_bib']
@@ -47,6 +61,22 @@ class MarcHelper( object ):
         file_url = r.json()['file']
         log.debug( 'file_url, ```%s```' % file_url )
         return file_url
+
+    # def initiate_bibrange_request( self, token, next_batch ):
+    #     """ Makes request that returns the marc file url.
+    #         Called by controller.download_file() """
+    #     start_bib = next_batch['chunk_start_bib']
+    #     end_bib = next_batch['chunk_end_bib'] if self.chunk_number_of_bibs is None else start_bib + self.chunk_number_of_bibs
+    #     # end_bib = next_batch['chunk_end_bib']
+    #     marc_url = '%sbibs/marc' % self.API_ROOT_URL
+    #     payload = { 'id': '[%s,%s]' % (start_bib, end_bib), 'limit': (end_bib - start_bib) + 1 }
+    #     log.debug( 'payload, ```%s```' % payload )
+    #     custom_headers = {'Authorization': 'Bearer %s' % token }
+    #     r = requests.get( marc_url, headers=custom_headers, params=payload )
+    #     log.debug( 'bib r.content, ```%s```' % r.content )
+    #     file_url = r.json()['file']
+    #     log.debug( 'file_url, ```%s```' % file_url )
+    #     return file_url
 
     def grab_file( self, token, file_url, file_name ):
         """ Downloads file.

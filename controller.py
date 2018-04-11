@@ -29,13 +29,29 @@ def manage_download():
         Called by `if __name__ == '__main__':` """
     log.debug( 'starting' )
     tracker = check_tracker_file()
-    next_batch = tracker_helper.get_next_batch( tracker )
-    if next_batch:
-        download_file( next_batch, tracker )
-    else:
-        log.debug( 'no next batch; quitting' )
+    half_hour = datetime.datetime.now() + datetime.timedelta( minutes=1 )  # TODO: 30
+    while datetime.datetime.now() < half_hour:
+        next_batch = tracker_helper.get_next_batch( tracker )
+        if next_batch:
+            download_file( next_batch, tracker )
+        else:
+            log.debug( 'no next batch; quitting' )
     log.debug( 'complete' )
     return
+
+
+# def manage_download():
+#     """ Controller function.
+#         Called by `if __name__ == '__main__':` """
+#     log.debug( 'starting' )
+#     tracker = check_tracker_file()
+#     next_batch = tracker_helper.get_next_batch( tracker )
+#     if next_batch:
+#         download_file( next_batch, tracker )
+#     else:
+#         log.debug( 'no next batch; quitting' )
+#     log.debug( 'complete' )
+#     return
 
 
 def check_tracker_file():
