@@ -1,4 +1,4 @@
-import logging, os
+import json, logging, os
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -19,6 +19,7 @@ class MarcHelper( object ):
         self.HTTPBASIC_KEY = os.environ['SBE__HTTPBASIC_USERNAME']
         self.HTTPBASIC_SECRET = os.environ['SBE__HTTPBASIC_PASSWORD']
         self.FILE_DOWNLOAD_DIR = os.environ['SBE__FILE_DOWNLOAD_DIR']
+        self.chunk_number_of_bibs = json.loads( os.environ['SBE__CHUNK_NUMBER_OF_BIBS_JSON'] )  # normally null -> None, or an int
 
     def get_token( self ):
         """ Gets API token.
@@ -34,9 +35,9 @@ class MarcHelper( object ):
     def initiate_bibrange_request( self, token, next_batch ):
         """ Makes request that returns the marc file url.
             Called by controller.download_file() """
-        log.debug( 'next_batch, ```%s```' % next_batch )
         start_bib = next_batch['chunk_start_bib']
-        end_bib = next_batch['chunk_end_bib']
+        end_bib = next_batch['chunk_end_bib'] if self.chunk_number_of_bibs is None else start_bib + self.chunk_number_of_bibs
+        # end_bib = next_batch['chunk_end_bib']
         marc_url = '%sbibs/marc' % self.API_ROOT_URL
         payload = { 'id': '[%s,%s]' % (start_bib, end_bib), 'limit': (end_bib - start_bib) + 1 }
         log.debug( 'payload, ```%s```' % payload )

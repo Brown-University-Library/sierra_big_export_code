@@ -30,7 +30,7 @@ class TrackerHelper( object ):
                 tracker = {
                     'last_updated': str(datetime.datetime.now()), 'last_bib': None, 'batches': [] }
                 f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
-        log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
+        log.debug( 'tracker, ```%s```' % pprint.pformat(tracker)[0:500] + '...' )
         return tracker
 
     def check_tracker_lastbib( self, tracker):
@@ -42,7 +42,7 @@ class TrackerHelper( object ):
             tracker['last_updated'] = datetime.datetime.now().isoformat()
             with open(self.TRACKER_FILEPATH, 'wb') as f:
                 f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
-        log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
+        log.debug( 'tracker, ```%s```' % pprint.pformat(tracker)[0:500] + '...' )
         return tracker
 
     def check_tracker_batches( self, tracker, start_bib, end_bib ):
@@ -53,7 +53,7 @@ class TrackerHelper( object ):
         tracker = self.prepare_tracker_batches( tracker, start_bib, end_bib )
         with open(self.TRACKER_FILEPATH, 'wb') as f:
             f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
-        log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
+        log.debug( 'tracker, ```%s```' % pprint.pformat(tracker)[0:500] + '...' )
         return tracker
 
     def prepare_tracker_batches( self, tracker, start_bib, end_bib ):
@@ -67,7 +67,7 @@ class TrackerHelper( object ):
             chunk_end_bib += 2000
             file_count += 1
         tracker['last_updated'] = datetime.datetime.now().isoformat()
-        log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
+        log.debug( 'tracker, ```%s```' % pprint.pformat(tracker)[0:500] + '...' )
         return tracker
 
     # def prepare_tracker_batches( self, tracker, start_bib, end_bib ):
@@ -101,13 +101,13 @@ class TrackerHelper( object ):
     def update_tracker( self, batch, tracker ):
         """ Updates current batch information.
             Called by controller.download_file() """
-        log.debug( 'tracker initially, ```%s```' % pprint.pformat(tracker) )
+        log.debug( 'tracker initially, ```%s```' % pprint.pformat(tracker)[0:500] + '...' )
         for entry in tracker['batches']:
             if entry['chunk_start_bib'] == batch['chunk_start_bib']:
                 entry['last_grabbed'] = datetime.datetime.now().isoformat()
                 tracker['last_updated'] = datetime.datetime.now().isoformat()
                 break
-        log.debug( 'tracker subsequently, ```%s```' % pprint.pformat(tracker) )
+        log.debug( 'tracker subsequently, ```%s```' % pprint.pformat(tracker)[0:500] + '...' )
         with open(self.TRACKER_FILEPATH, 'wb') as f:
             f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
         return
