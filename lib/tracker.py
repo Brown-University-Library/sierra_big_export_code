@@ -16,7 +16,7 @@ class TrackerHelper( object ):
     def __init__( self ):
         self.TRACKER_FILEPATH = os.environ['SBE__TRACKER_JSON_PATH']
         self.LASTBIB_URL = os.environ['SBE__LASTBIB_URL']
-        self.NUMBER_OF_CHUNKS = int( os.environ['SBE__NUMBER_OF_CHUNKS'] )
+        # self.NUMBER_OF_CHUNKS = int( os.environ['SBE__NUMBER_OF_CHUNKS'] )
         self.chunk_number_of_bibs = json.loads( os.environ['SBE__CHUNK_NUMBER_OF_BIBS_JSON'] )  # normally null -> None, or an int
 
     def grab_tracker_file( self ):
@@ -61,7 +61,7 @@ class TrackerHelper( object ):
             Called by check_tracker_batches() """
         ( chunk_start_bib, chunk_end_bib, file_count ) = ( start_bib, start_bib + 2000, 0 )  # 2000 is api-limit
         while chunk_start_bib < end_bib:
-            chunk_dct = { 'chunk_start_bib': chunk_start_bib, 'chunk_end_bib': chunk_end_bib, 'last_grabbed': None, 'file_name': 'sierra_export_%s.mrc' % str(file_count).rjust( 2, '0' ) }
+            chunk_dct = { 'chunk_start_bib': chunk_start_bib, 'chunk_end_bib': chunk_end_bib, 'last_grabbed': None, 'file_name': 'sierra_export_%s.mrc' % str(file_count).rjust( 4, '0' ) }
             tracker['batches'].append( chunk_dct )
             chunk_start_bib += 2000
             chunk_end_bib += 2000
