@@ -23,14 +23,16 @@ if (sys.version_info < (3, 0)):
 marc_helper = MarcHelper()
 tracker_helper = TrackerHelper()
 
+LOOP_DURATION_IN_MINUTES = int( os.environ['SBE__LOOP_DURATION_IN_MINUTES'] )
+
 
 def manage_download():
     """ Controller function.
         Called by `if __name__ == '__main__':` """
     log.debug( 'starting' )
     tracker = check_tracker_file()
-    half_hour = datetime.datetime.now() + datetime.timedelta( minutes=1 )  # TODO: 30
-    while datetime.datetime.now() < half_hour:
+    processing_duration = datetime.datetime.now() + datetime.timedelta( minutes=LOOP_DURATION_IN_MINUTES )
+    while datetime.datetime.now() < processing_duration:
         next_batch = tracker_helper.get_next_batch( tracker )
         if next_batch:
             download_file( next_batch, tracker )
