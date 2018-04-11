@@ -59,31 +59,31 @@ class TrackerHelper( object ):
     def prepare_tracker_batches( self, tracker, start_bib, end_bib ):
         """ Prepares the batches.
             Called by check_tracker_batches() """
-        full_bib_range = end_bib - start_bib
-        chunk_number_of_bibs = self.chunk_number_of_bibs if self.chunk_number_of_bibs else math.ceil( full_bib_range / self.NUMBER_OF_CHUNKS )  # by rounding up the last batch will be sure to include the `end_bib`
-        log.debug( 'chunk_number_of_bibs, `%s`' % chunk_number_of_bibs )
-        ( chunk_start_bib, chunk_end_bib ) = ( start_bib, start_bib + chunk_number_of_bibs )
-        for i in range( 0, self.NUMBER_OF_CHUNKS ):
-            chunk_dct = { 'chunk_start_bib': chunk_start_bib, 'chunk_end_bib': chunk_end_bib, 'last_grabbed': None, 'file_name': 'sierra_export_%s.mrc' % str(i).rjust( 2, '0' ) }
+        ( chunk_start_bib, chunk_end_bib, file_count ) = ( start_bib, start_bib + 2000, 0 )  # 2000 is api-limit
+        while chunk_start_bib < end_bib:
+            chunk_dct = { 'chunk_start_bib': chunk_start_bib, 'chunk_end_bib': chunk_end_bib, 'last_grabbed': None, 'file_name': 'sierra_export_%s.mrc' % str(file_count).rjust( 2, '0' ) }
             tracker['batches'].append( chunk_dct )
-            ( chunk_start_bib, chunk_end_bib ) = ( chunk_start_bib + chunk_number_of_bibs, chunk_end_bib + chunk_number_of_bibs )
+            chunk_start_bib += 2000
+            chunk_end_bib += 2000
+            file_count += 1
         tracker['last_updated'] = datetime.datetime.now().isoformat()
         log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
         return tracker
 
-    def prepare_tracker_batches( self, tracker, start_bib, end_bib ):
-        """ Prepares the batches.
-            Called by check_tracker_batches() """
-        full_bib_range = end_bib - start_bib
-        chunk_number_of_bibs = math.ceil( full_bib_range / self.NUMBER_OF_CHUNKS )  # by rounding up the last batch will be sure to include the `end_bib`
-        ( chunk_start_bib, chunk_end_bib ) = ( start_bib, start_bib + chunk_number_of_bibs )
-        for i in range( 0, self.NUMBER_OF_CHUNKS ):
-            chunk_dct = { 'chunk_start_bib': chunk_start_bib, 'chunk_end_bib': chunk_end_bib, 'last_grabbed': None, 'file_name': 'sierra_export_%s.mrc' % str(i).rjust( 2, '0' ) }
-            tracker['batches'].append( chunk_dct )
-            ( chunk_start_bib, chunk_end_bib ) = ( chunk_start_bib + chunk_number_of_bibs, chunk_end_bib + chunk_number_of_bibs )
-        tracker['last_updated'] = datetime.datetime.now().isoformat()
-        log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
-        return tracker
+    # def prepare_tracker_batches( self, tracker, start_bib, end_bib ):
+    #     """ Prepares the batches.
+    #         Called by check_tracker_batches() """
+    #     full_bib_range = end_bib - start_bib
+    #     chunk_number_of_bibs = self.chunk_number_of_bibs if self.chunk_number_of_bibs else math.ceil( full_bib_range / self.NUMBER_OF_CHUNKS )  # by rounding up the last batch will be sure to include the `end_bib`
+    #     log.debug( 'chunk_number_of_bibs, `%s`' % chunk_number_of_bibs )
+    #     ( chunk_start_bib, chunk_end_bib ) = ( start_bib, start_bib + chunk_number_of_bibs )
+    #     for i in range( 0, self.NUMBER_OF_CHUNKS ):
+    #         chunk_dct = { 'chunk_start_bib': chunk_start_bib, 'chunk_end_bib': chunk_end_bib, 'last_grabbed': None, 'file_name': 'sierra_export_%s.mrc' % str(i).rjust( 2, '0' ) }
+    #         tracker['batches'].append( chunk_dct )
+    #         ( chunk_start_bib, chunk_end_bib ) = ( chunk_start_bib + chunk_number_of_bibs, chunk_end_bib + chunk_number_of_bibs )
+    #     tracker['last_updated'] = datetime.datetime.now().isoformat()
+    #     log.debug( 'tracker, ```%s```' % pprint.pformat(tracker) )
+    #     return tracker
 
     def get_next_batch( self, tracker ):
         """ Returns the next batch of bibs to grab.
