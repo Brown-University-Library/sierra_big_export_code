@@ -92,9 +92,9 @@ class TrackerHelper( object ):
             Called by controller.manage_download() """
         batch = None
         for entry in tracker['batches']:
-            twentyfour_hours_ago = datetime.datetime.now() + datetime.timedelta( hours=-24 )
-            # if entry['last_grabbed'] is None or entry['last_grabbed'] < twentyfour_hours_ago:
-            if entry['last_grabbed'] is None or datetime.datetime.strptime( entry['last_grabbed'], '%Y-%m-%dT%H:%M:%S.%f' ) < twentyfour_hours_ago:  # the second 'or' condition converts the isoformat-date back into a date-object to be able to compare
+            # twentyfour_hours_ago = datetime.datetime.now() + datetime.timedelta( hours=-24 )
+            # if entry['last_grabbed'] is None or datetime.datetime.strptime( entry['last_grabbed'], '%Y-%m-%dT%H:%M:%S.%f' ) < twentyfour_hours_ago:  # the second 'or' condition converts the isoformat-date back into a date-object to be able to compare
+            if entry['last_grabbed'] is None:
                 batch = entry
                 break
         log.debug( 'batch, ```%s```' % pprint.pformat(batch) )
