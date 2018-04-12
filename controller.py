@@ -38,6 +38,7 @@ def manage_download():
             download_file( next_batch, tracker )
         else:
             log.debug( 'no next batch; quitting' )
+            sys.exit()
     log.debug( 'complete' )
     return
 
