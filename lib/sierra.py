@@ -19,6 +19,7 @@ class MarcHelper( object ):
         self.HTTPBASIC_KEY = os.environ['SBE__HTTPBASIC_USERNAME']
         self.HTTPBASIC_SECRET = os.environ['SBE__HTTPBASIC_PASSWORD']
         self.FILE_DOWNLOAD_DIR = os.environ['SBE__FILE_DOWNLOAD_DIR']
+        self.INVALID_PARAM_FILE_URL = os.environ['SBE__INVALID_PARAM_FILE_URL']
         self.chunk_number_of_bibs = json.loads( os.environ['SBE__CHUNK_NUMBER_OF_BIBS_JSON'] )  # normally null -> None, or an int
 
     def get_token( self ):
@@ -49,6 +50,8 @@ class MarcHelper( object ):
                 sys.exit()
 
     def make_bibrange_request( self, token, next_batch ):
+        """ Forms and executes the bib-range query.
+            Called by initiate_bibrange_request() """
         start_bib = next_batch['chunk_start_bib']
         end_bib = next_batch['chunk_end_bib'] if self.chunk_number_of_bibs is None else start_bib + self.chunk_number_of_bibs
         # end_bib = next_batch['chunk_end_bib']
@@ -57,14 +60,29 @@ class MarcHelper( object ):
         log.debug( 'payload, ```%s```' % payload )
         custom_headers = {'Authorization': 'Bearer %s' % token }
         r = requests.get( marc_url, headers=custom_headers, params=payload )
-        log.debug( 'bib r.content, ```%s```' % r.content )
-        file_url = r.json()['file']
-        log.debug( 'file_url, ```%s```' % file_url )
+        file_url = self.assess_bibrange_response( r )
         return file_url
 
-    # def initiate_bibrange_request( self, token, next_batch ):
-    #     """ Makes request that returns the marc file url.
-    #         Called by controller.download_file() """
+    def assess_bibrange_response( self, r ):
+        """ Analyzes bib-range response.
+            Called by make_bibrange_request() """
+        log.debug( 'bib r.content, ```%s```' % r.content )
+        file_url = r.json().get( 'file', None )
+        if file_url:
+            log.debug( 'normal file_url found' )
+            return file_url
+        if r.json().get( 'name', None ) == 'Rate exceeded for endpoint':
+            message = 'exception: ```Rate exceeded for endpoint```'
+            raise Exception( message )
+        elif r.json().get( 'name', None ) == 'External Process Failed':
+            log.debug( 'returning bad-param file_url, ```%s```' % self.INVALID_PARAM_FILE_URL )
+            file_url = self.INVALID_PARAM_FILE_URL
+            return file_url
+        else:
+            message = 'exception: see logs'
+            raise Exception( message )
+
+    # def make_bibrange_request( self, token, next_batch ):
     #     start_bib = next_batch['chunk_start_bib']
     #     end_bib = next_batch['chunk_end_bib'] if self.chunk_number_of_bibs is None else start_bib + self.chunk_number_of_bibs
     #     # end_bib = next_batch['chunk_end_bib']
