@@ -17,6 +17,7 @@ logging.basicConfig(
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("requests.packages.urllib3").setLevel(logging.WARNING)
 log = logging.getLogger(__name__)
+log.propagate = False
 log.debug( '\n-------\nstarting log' )
 
 if (sys.version_info < (3, 0)):
@@ -43,20 +44,6 @@ def manage_download():
             sys.exit()
     log.debug( 'complete' )
     return
-
-
-# def manage_download():
-#     """ Controller function.
-#         Called by `if __name__ == '__main__':` """
-#     log.debug( 'starting' )
-#     tracker = check_tracker_file()
-#     next_batch = tracker_helper.get_next_batch( tracker )
-#     if next_batch:
-#         download_file( next_batch, tracker )
-#     else:
-#         log.debug( 'no next batch; quitting' )
-#     log.debug( 'complete' )
-#     return
 
 
 def check_tracker_file():
