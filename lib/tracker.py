@@ -1,5 +1,7 @@
 import datetime, json, logging, math, os, pprint
 import requests
+from requests.auth import HTTPBasicAuth
+from lib.tracker import LastBibHelper
 
 logging.basicConfig(
     filename=os.environ['SBE__LOG_PATH'],
@@ -11,7 +13,11 @@ log = logging.getLogger(__name__)
 log.debug( 'loading tracker' )
 
 
+last_bibber = LastBibHelper()
+
+
 class TrackerHelper( object ):
+    """ Manages code associated with tracker.json file. """
 
     def __init__( self ):
         self.TRACKER_FILEPATH = os.environ['SBE__TRACKER_JSON_PATH']
@@ -116,3 +122,52 @@ class TrackerHelper( object ):
         return
 
     ## end class class TrackerHelper()
+
+
+class LastBibHelper( object):
+    """ Manages code associated with getting the last-bib, required for producing the range of bibs to query. """
+
+    def __init__( self ):
+        self.API_ROOT_URL = os.environ['SBE__ROOT_URL']
+        self.HTTPBASIC_KEY = os.environ['SBE__HTTPBASIC_USERNAME']
+        self.HTTPBASIC_SECRET = os.environ['SBE__HTTPBASIC_PASSWORD']
+        self.custom_headers = None
+
+
+    def get_last_bib( self ):
+        """ Controller to manage call to api to obtain last-bib.
+            Called by TrackerHelper.check_tracker_lastbib()
+            TODO: replace with J.M. method of posting a json query to the api to really get the last bib. """
+        token = self.get_token()
+        last_bib = self.get_api_last_bib( token )
+        return 'foo'
+
+    def get_token( self ):
+        """ Gets api token.
+            Called by get_last_bib() """
+        token_url = '%stoken' % self.API_ROOT_URL
+        log.debug( 'token_url, ```%s```' % token_url )
+        r = requests.post( token_url, auth=HTTPBasicAuth(self.HTTPBASIC_KEY, self.HTTPBASIC_SECRET) )
+        log.debug( 'token r.content, ```%s```' % r.content )
+        token = r.json()['access_token']
+        log.debug( 'token, ```%s```' % token )
+        self.custom_headers = {'Authorization': 'Bearer %s' % token }  # for use in subsequent request
+        return
+
+    def get_api_last_bib( self, token ):
+        """ Hits api and obtains last bib (really first bib for last day).
+            Called by get_last_bib() """
+        log.debug( '\n-------\ngetting end-bib\n-------' )
+        bib_url = '%sbibs/' % self.API_ROOT_URL
+        today_date = datetime.date.today().isoformat()
+        start_datetime = '%sT00:00:00Z' % today_date
+        end_datetime = '%sT23:59:59Z' % today_date
+        payload = {
+            'limit': '1', 'createdDate': '[%s,%s]' % (start_datetime, end_datetime)  }
+        r = requests.get( bib_url, headers=self.custom_headers, params=payload )
+        log.debug( 'bib r.content, ```%s```' % r.content )
+        api_lastbib = r.json()['entries'][0]['id']
+        log.debug( 'api_lastbib, `%s`' % api_lastbib )
+        return api_lastbib
+
+    ## end class LastBibHelper()
