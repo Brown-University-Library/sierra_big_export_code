@@ -1,7 +1,6 @@
 import datetime, json, logging, math, os, pprint
 import requests
 from requests.auth import HTTPBasicAuth
-from lib.tracker import LastBibHelper
 
 logging.basicConfig(
     filename=os.environ['SBE__LOG_PATH'],
@@ -9,11 +8,10 @@ logging.basicConfig(
     format='[%(asctime)s] %(levelname)s [%(module)s-%(funcName)s()::%(lineno)d] %(message)s',
     datefmt='%d/%b/%Y %H:%M:%S'
     )
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("requests.packages.urllib3").setLevel(logging.WARNING)
 log = logging.getLogger(__name__)
 log.debug( 'loading tracker' )
-
-
-last_bibber = LastBibHelper()
 
 
 class TrackerHelper( object ):
@@ -24,6 +22,7 @@ class TrackerHelper( object ):
         self.LASTBIB_URL = os.environ['SBE__LASTBIB_URL']
         # self.NUMBER_OF_CHUNKS = int( os.environ['SBE__NUMBER_OF_CHUNKS'] )
         self.chunk_number_of_bibs = json.loads( os.environ['SBE__CHUNK_NUMBER_OF_BIBS_JSON'] )  # normally null -> None, or an int
+        self.last_bibber = LastBibHelper()
 
     def grab_tracker_file( self ):
         """ Returns (creates if necessary) tracker from json file.
@@ -46,9 +45,11 @@ class TrackerHelper( object ):
             try:
                 r = requests.get( self.LASTBIB_URL )
                 last_bib = r.json()['entries'][0]['id']
-            except:
-                last_bibber.get_last_bib()
-            tracker['last_bib'] = r.json()['entries'][0]['id']
+            except Exception as e:
+                log.debug( 'exception, ```%s```' % str(e) )
+                last_bib = self.last_bibber.get_last_bib()
+            log.debug( 'last_bib, `%s`' % last_bib )
+            tracker['last_bib'] = last_bib
             tracker['last_updated'] = datetime.datetime.now().isoformat()
             with open(self.TRACKER_FILEPATH, 'wb') as f:
                 f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
@@ -140,7 +141,7 @@ class LastBibHelper( object):
             TODO: replace with J.M. method of posting a json query to the api to really get the last bib. """
         token = self.get_token()
         last_bib = self.get_api_last_bib( token )
-        return 'foo'
+        return last_bib
 
     def get_token( self ):
         """ Gets api token.

@@ -8,6 +8,8 @@ logging.basicConfig(
     format='[%(asctime)s] %(levelname)s [%(module)s-%(funcName)s()::%(lineno)d] %(message)s',
     datefmt='%d/%b/%Y %H:%M:%S'
     )
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("requests.packages.urllib3").setLevel(logging.WARNING)
 log = logging.getLogger(__name__)
 log.debug( 'loading sierra module' )
 
