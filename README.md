@@ -61,9 +61,9 @@ Back to this code...
 
 These are in no-particular order; the purpose is to capture ideas that have come up in discussions/brainstorms.
 
-- H.C. is exploring using other features of the api to get json data-elements instead of marc records, and directly act on that json (with the utilizing the traject massage-logic) to solrize updates.
+- H.C. is exploring using other features of the api to get json data-elements instead of marc records, and directly act on that json (utilizing the traject massage-logic) to solrize updates.
 
-- It is possible for there to be no records returned for a given range of 2000 bibs, because many bibs have been deleted. This explains why we have a bib _range_ of roughly 8 million bibs, but actually _have_ about 4 million bibs. We've been told that if a bib is deleted, that bib will not return (will not be "undeleted"). Given that, if we were to track deleted bibs, we should be able to significantly improve the number and efficiency of the queries.
+- It is possible for there to be no records returned for a given range of 2000 bibs, because many bibs have been deleted. This explains why we have a bib _range_ of roughly 8 million bibs, but actually _have_ about 4 million bibs. We've been told that if a bib is deleted, that bib will not return (will not be "undeleted"). Given that, if we were to track deleted bibs, we should be able to significantly reduce the number and increase the efficiency of the queries.
 
 - Currently a file-url is provided by the api even when the number of records to be returned is zero. Instead of downloading that non-useful file, we could instead simply not download it.
 
