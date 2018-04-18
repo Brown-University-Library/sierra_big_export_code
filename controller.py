@@ -28,6 +28,8 @@ tracker_helper = TrackerHelper()
 
 LOOP_DURATION_IN_MINUTES = int( os.environ['SBE__LOOP_DURATION_IN_MINUTES'] )
 
+os.nice( 19 )
+
 
 def manage_download():
     """ Controller function.
