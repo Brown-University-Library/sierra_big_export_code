@@ -48,25 +48,32 @@ last_week_date = datetime.date.today() + datetime.timedelta( days=-7 )
 
 ## create start_datetime
 start_datetime = '%sT00:00:00Z' % last_week_date.isoformat()
-payload = {
-    'limit': '2000', 'suppressed': False, 'fields': 'id', 'createdDate': '[%s,]' % start_datetime  }
-log.debug( 'payload, ```%s```' % pprint.pformat(payload) )
 
-r = requests.get( bib_url, headers=custom_headers, params=payload )
-log.debug( 'bib r.content, ```%s```' % r.content )
-jdct = r.json()
+## loop
+( temp_last_bib, actual_last_bib, iteration_count ) = ( None, None, 0 )
+while actual_last_bib is None:
+    iteration_count += 1
+    ## create payload
+    payload = {
+        'limit': '2000', 'suppressed': False, 'fields': 'id', 'createdDate': '[%s,]' % start_datetime  }
+    if temp_last_bib:
+        payload['id'] = '[%s,]' % temp_last_bib
+    log.debug( 'iteration_count, `%s`; payload, ```%s```' % (iteration_count, pprint.pformat(payload)) )
+    ## make request
+    r = requests.get( bib_url, headers=custom_headers, params=payload )
+    log.debug( 'bib r.content, ```%s```' % r.content )
+    bib_jdct = r.json()
+    ## check results
+    count_returned = bib_jdct['total']
+    if count_returned < 2000:  # we're done
+        actual_last_bib = bib_jdct['entries'][-1]['id']
+    else:
+        temp_last_bib = bib_jdct['entries'][-1]['id']
+    log.debug( 'temp_last_bib, `%s`; actual_last_bib, `%s`' % (temp_last_bib, actual_last_bib) )
 
-## check count
-( temp_last_bib, actual_last_bib ) = ( 'init', 'init' )
-count_returned = jdct['total']
-if count_returned < 2000:
-    actual_last_bib = jdct['entries'][-1]
-else:
-    temp_last_bib = jdct['entries'][-1]
-log.debug( 'temp_last_bib, `%s`; actual_last_bib, `%s`' % (temp_last_bib, actual_last_bib) )
 
+log.debug( 'out of loop -- temp_last_bib, `%s`; actual_last_bib, `%s`' % (temp_last_bib, actual_last_bib) )
 
-1/0
 
 # ===================================
 # get local last bib data
@@ -77,7 +84,7 @@ try:
     with open( LASTBIB_JSON_PATH ) as f:
         stored_lastbib_data = json.loads( f.read() )
         stored_lastbib = stored_lastbib_data['entries'][0]['id']
-    log.debug( 'stored_lastbib, `%s`' % api_lastbib )
+    log.debug( 'stored_lastbib, `%s`' % stored_lastbib )
 except Exception as e:
     log.error( 'exception getting stored_lastbib, ```%s```' % str(e) )
     pass
@@ -91,13 +98,13 @@ if stored_lastbib is None:
     log.debug( 'could not determine stored_lastbib' )
     keep_flag = False
 elif stored_lastbib:
-    if api_lastbib > stored_lastbib:
+    if actual_last_bib > stored_lastbib:
         log.debug( 'overwriting stored data' )
         keep_flag = False
 if not keep_flag:
     with open( LASTBIB_JSON_PATH, 'w+' ) as f:
-        api_lastbib_data['updated_with_api_data'] = datetime.datetime.now().isoformat()
-        f.write( json.dumps(api_lastbib_data, sort_keys=True, indent=2) )
+        bib_jdct['updated_with_api_data'] = datetime.datetime.now().isoformat()
+        f.write( json.dumps(bib_jdct, sort_keys=True, indent=2) )
     log.debug( 'overwrite successful' )
 else:
     log.debug( 'no need to overwrite' )
