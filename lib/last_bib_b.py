@@ -62,18 +62,24 @@ while actual_last_bib is None:
     ## make request
     r = requests.get( bib_url, headers=custom_headers, params=payload )
     log.debug( 'bib r.content, ```%s```' % r.content )
-    bib_jdct = r.json()
+    tmp_bib_jdct = r.json()
     ## check results
-    count_returned = bib_jdct['total']
+    count_returned = tmp_bib_jdct['total']
     if count_returned < 2000:  # we're done
-        actual_last_bib = bib_jdct['entries'][-1]['id']
+        actual_last_bib = tmp_bib_jdct['entries'][-1]['id']
     else:
-        temp_last_bib = bib_jdct['entries'][-1]['id']
+        temp_last_bib = tmp_bib_jdct['entries'][-1]['id']
     log.debug( 'temp_last_bib, `%s`; actual_last_bib, `%s`' % (temp_last_bib, actual_last_bib) )
-
 
 log.debug( 'out of loop -- temp_last_bib, `%s`; actual_last_bib, `%s`' % (temp_last_bib, actual_last_bib) )
 
+## actually get last-bib
+payload = {
+    'limit': '1', 'suppressed': False, 'id': actual_last_bib  }
+log.debug( 'payload, ```%s```' % payload )
+r = requests.get( bib_url, headers=custom_headers, params=payload )
+bib_jdct = r.json()['entries'][0]
+log.debug( 'bib_jdct, ```%s```' % pprint.pformat(bib_jdct) )
 
 # ===================================
 # get local last bib data
