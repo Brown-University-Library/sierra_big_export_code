@@ -44,10 +44,11 @@ class TrackerHelper( object ):
         if not tracker['last_bib']:
             try:
                 r = requests.get( self.LASTBIB_URL )
-                last_bib = r.json()['entries'][0]['id']
+                last_bib = r.json()['id']
             except Exception as e:
-                log.debug( 'exception, ```%s```' % str(e) )
-                last_bib = self.last_bibber.get_last_bib()
+                log.error( 'exception, ```%s```' % str(e) )
+                # last_bib = self.last_bibber.get_last_bib()
+                raise Exception( 'could not obtain last_bib' )
             log.debug( 'last_bib, `%s`' % last_bib )
             tracker['last_bib'] = last_bib
             tracker['last_updated'] = datetime.datetime.now().isoformat()
@@ -55,18 +56,6 @@ class TrackerHelper( object ):
                 f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
         log.debug( 'tracker, ```%s```' % pprint.pformat(tracker)[0:500] + '...' )
         return tracker
-
-    # def check_tracker_lastbib( self, tracker):
-    #     """ Obtains last bib if it doesn't already exist.
-    #         Called by controller.check_tracker_file() """
-    #     if not tracker['last_bib']:
-    #         r = requests.get( self.LASTBIB_URL )
-    #         tracker['last_bib'] = r.json()['entries'][0]['id']
-    #         tracker['last_updated'] = datetime.datetime.now().isoformat()
-    #         with open(self.TRACKER_FILEPATH, 'wb') as f:
-    #             f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
-    #     log.debug( 'tracker, ```%s```' % pprint.pformat(tracker)[0:500] + '...' )
-    #     return tracker
 
     def check_tracker_batches( self, tracker, start_bib, end_bib ):
         """ Checks for batches and creates them if they don't exist.
