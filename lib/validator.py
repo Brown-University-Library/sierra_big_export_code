@@ -22,15 +22,19 @@ class FileChecker( object ):
             '"description":"invalid_grant"'
             ]
 
-    def validate_marc_files( self ):
+    def validate_marc_files( self, tracker ):
         """ Checks all the downloaded marc files, and changes the suffix for invalid ones.
             Called by controller -> manage_download() """
+        if tracker['files_validated']:
+            log.debug( 'files already validated; returning' )
+            return
         marc_file_list = glob.glob( '%s/*.mrc' % self.FILE_DOWNLOAD_DIR )
         for file_path in marc_file_list:
             size_in_bytes = os.path.getsize( file_path )
             if size_in_bytes < 1000:
                 log.debug( 'file, ```%s``` is only `%s` bytes' % (file_path, size_in_bytes) )
                 self.open_and_check_file( file_path )
+        tracker.update_validation_status( tracker )
         return
 
     def open_and_check_file( self, file_path ):
