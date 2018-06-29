@@ -56,9 +56,9 @@ class MarcHelper( object ):
             Called by initiate_bibrange_request() """
         start_bib = next_batch['chunk_start_bib']
         end_bib = next_batch['chunk_end_bib'] if self.chunk_number_of_bibs is None else start_bib + self.chunk_number_of_bibs
-        # end_bib = next_batch['chunk_end_bib']
         marc_url = '%sbibs/marc' % self.API_ROOT_URL
-        payload = { 'id': '[%s,%s]' % (start_bib, end_bib), 'limit': (end_bib - start_bib) + 1 }
+        # payload = { 'id': '[%s,%s]' % (start_bib, end_bib), 'limit': (end_bib - start_bib) + 1 }
+        payload = { 'id': '[%s,%s]' % (start_bib, end_bib), 'limit': (end_bib - start_bib) + 1, 'mapping': 'toc' }
         log.debug( 'payload, ```%s```' % payload )
         custom_headers = {'Authorization': 'Bearer %s' % token }
         r = requests.get( marc_url, headers=custom_headers, params=payload )
