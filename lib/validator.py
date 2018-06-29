@@ -1,4 +1,6 @@
 import glob, logging, ntpath, os, pprint, shutil
+from lib.tracker import TrackerHelper
+
 
 logging.basicConfig(
     filename=os.environ['SBE__LOG_PATH'],
@@ -10,6 +12,8 @@ logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("requests.packages.urllib3").setLevel(logging.WARNING)
 log = logging.getLogger(__name__)
 log.debug( 'loading validator module' )
+
+tracker_helper = TrackerHelper()
 
 
 class FileChecker( object ):
@@ -34,7 +38,7 @@ class FileChecker( object ):
             if size_in_bytes < 1000:
                 log.debug( 'file, ```%s``` is only `%s` bytes' % (file_path, size_in_bytes) )
                 self.open_and_check_file( file_path )
-        tracker.update_validation_status( tracker )
+        tracker_helper.update_validation_status( tracker )
         return
 
     def open_and_check_file( self, file_path ):
