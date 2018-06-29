@@ -36,16 +36,16 @@ os.nice( 19 )
 # def manage_download():
 #     """ Controller function.
 #         Called by `if __name__ == '__main__':` """
-#     log.debug( 'starting' )
 #     tracker = check_tracker_file()
 #     processing_duration = datetime.datetime.now() + datetime.timedelta( minutes=LOOP_DURATION_IN_MINUTES )
 #     while datetime.datetime.now() < processing_duration:
+#         break
 #         next_batch = tracker_helper.get_next_batch( tracker )
 #         if next_batch:
 #             download_file( next_batch, tracker )
 #         else:
-#             log.debug( 'no next batch; quitting' )
-#             sys.exit()
+#             log.debug( 'no next batch; quitting' ); break
+#     file_checker.validate_marc_files()
 #     log.debug( 'complete' )
 #     return
 
@@ -62,7 +62,7 @@ def manage_download():
             download_file( next_batch, tracker )
         else:
             log.debug( 'no next batch; quitting' ); break
-    file_checker.validate_marc_files()
+    file_checker.validate_marc_files( tracker )
     log.debug( 'complete' )
     return
 

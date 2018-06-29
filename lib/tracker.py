@@ -33,7 +33,7 @@ class TrackerHelper( object ):
         except:
             with open(self.TRACKER_FILEPATH, 'wb') as f:
                 tracker = {
-                    'last_updated': str(datetime.datetime.now()), 'last_bib': None, 'batches': [] }
+                    'last_updated': str(datetime.datetime.now()), 'last_bib': None, 'batches': [], 'files_validated': False }
                 f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
         log.debug( 'tracker, ```%s```' % pprint.pformat(tracker)[0:500] + '...' )
         return tracker
@@ -109,6 +109,16 @@ class TrackerHelper( object ):
         log.debug( 'tracker subsequently, ```%s```' % pprint.pformat(tracker)[0:500] + '...' )
         with open(self.TRACKER_FILEPATH, 'wb') as f:
             f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
+        return
+
+    def update_validation_status( self, tracker ):
+        """ Sets files_validated to True.
+            Called by validator.FileChecker.validate_marc_files() """
+        tracker['files_validated'] = True
+        tracker['last_updated'] = datetime.datetime.now().isoformat()
+        with open(self.TRACKER_FILEPATH, 'wb') as f:
+            f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
+        log.debug( 'tracker updated')
         return
 
     ## end class class TrackerHelper()
