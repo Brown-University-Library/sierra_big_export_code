@@ -118,7 +118,7 @@ class TrackerHelper( object ):
         tracker['last_updated'] = datetime.datetime.now().isoformat()
         with open(self.TRACKER_FILEPATH, 'wb') as f:
             f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
-        log.debug( 'tracker updated')
+        log.debug( 'files validated; tracker updated')
         return
 
     ## end class class TrackerHelper()
