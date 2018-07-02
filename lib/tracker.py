@@ -1,4 +1,4 @@
-import datetime, json, logging, math, os, pprint
+import datetime, glob, json, logging, math, os, pprint
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -58,6 +58,16 @@ class TrackerHelper( object ):
             Reason: new file should overwrite previous ones, and the names should be sequential so this should not be needed,
                     but I've noticed occasional file datestamp odditites.
             Called by grab_tracker_file() """
+        filepath_list = glob.glob( '%s/*.mrc' % self.FILE_DOWNLOAD_DIR )
+        filepath_list.extend( glob.glob('%s/*.txt' % self.FILE_DOWNLOAD_DIR) )
+        if len( filepath_list ) == 0:
+            log.debug( 'no files to delete' )
+        else:
+            for f in filepath_list:
+                log.debug( 'about to remove filepath, %s```' % f )
+                os.remove( f )
+        log.debug( 'deletion-step complete' )
+        return
 
     def check_tracker_lastbib( self, tracker):
         """ Obtains last bib if it doesn't already exist.
