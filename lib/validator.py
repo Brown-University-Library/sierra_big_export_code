@@ -48,7 +48,7 @@ class FileChecker( object ):
             content = f.read()
             for bad_data_check in self.non_marc_indicators:
                 if bad_data_check in content:
-                    file_name = ntpath.basename( file_path )
+                    file_name = os.path.basename( file_path )
                     new_file_name = file_name.replace( '.mrc', '.txt' )
                     new_file_path = '%s/%s' % ( self.FILE_DOWNLOAD_DIR, new_file_name)
                     log.debug( 'moving bad-file to new_file_path, ```%s```' % new_file_path )
