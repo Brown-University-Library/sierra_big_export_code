@@ -20,9 +20,23 @@ class TrackerHelper( object ):
     def __init__( self ):
         self.TRACKER_FILEPATH = os.environ['SBE__TRACKER_JSON_PATH']
         self.LASTBIB_URL = os.environ['SBE__LASTBIB_URL']
-        # self.NUMBER_OF_CHUNKS = int( os.environ['SBE__NUMBER_OF_CHUNKS'] )
         self.chunk_number_of_bibs = json.loads( os.environ['SBE__CHUNK_NUMBER_OF_BIBS_JSON'] )  # normally null -> None, or an int
         self.last_bibber = LastBibHelper()
+        self.FILE_DOWNLOAD_DIR = os.environ['SBE__FILE_DOWNLOAD_DIR']
+
+    # def grab_tracker_file( self ):
+    #     """ Returns (creates if necessary) tracker from json file.
+    #         Called by controller.check_tracker_file() """
+    #     try:
+    #         with open(self.TRACKER_FILEPATH, 'rb') as f:
+    #             tracker = json.loads( f.read() )
+    #     except:
+    #         with open(self.TRACKER_FILEPATH, 'wb') as f:
+    #             tracker = {
+    #                 'last_updated': str(datetime.datetime.now()), 'last_bib': None, 'batches': [], 'files_validated': False }
+    #             f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
+    #     log.debug( 'tracker, ```%s```' % pprint.pformat(tracker)[0:500] + '...' )
+    #     return tracker
 
     def grab_tracker_file( self ):
         """ Returns (creates if necessary) tracker from json file.
@@ -31,12 +45,19 @@ class TrackerHelper( object ):
             with open(self.TRACKER_FILEPATH, 'rb') as f:
                 tracker = json.loads( f.read() )
         except:
+            self.clear_download_directory()
             with open(self.TRACKER_FILEPATH, 'wb') as f:
                 tracker = {
                     'last_updated': str(datetime.datetime.now()), 'last_bib': None, 'batches': [], 'files_validated': False }
                 f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
-        log.debug( 'tracker, ```%s```' % pprint.pformat(tracker)[0:500] + '...' )
+        log.debug( 'tracker, ```%s```' % pprint.pformat(tracker)[-500:] + '...' )
         return tracker
+
+    def clear_download_directory( self ):
+        """ Empties download directory of existing files.
+            Reason: new file should overwrite previous ones, and the names should be sequential so this should not be needed,
+                    but I've noticed occasional file datestamp odditites.
+            Called by grab_tracker_file() """
 
     def check_tracker_lastbib( self, tracker):
         """ Obtains last bib if it doesn't already exist.
