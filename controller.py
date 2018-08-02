@@ -44,7 +44,7 @@ def manage_download():
             download_file( next_batch, tracker )
         else:
             log.debug( 'no next batch; quitting' ); break
-    file_checker.validate_marc_files( tracker )
+    # file_checker.validate_marc_files( tracker )  # now done via separate cron job
     log.debug( 'complete' )
     return
 
