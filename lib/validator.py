@@ -34,7 +34,7 @@ class FileChecker( object ):
     def validate_marc_files( self ):
         """ Checks all the downloaded marc files, and changes the suffix for invalid ones.
             Called by controller -> manage_download() """
-        marc_file_list = glob.glob( '%s/*.mrc' % self.FILE_DOWNLOAD_DIR )
+        marc_file_list = sorted( glob.glob('%s/*.mrc' % self.FILE_DOWNLOAD_DIR) )
         # marc_file_list = sorted( glob.glob( '%s/*.*' % self.FILE_DOWNLOAD_DIR ) )
         log.debug( 'marc_file_list, ```%s```' % marc_file_list )
         start = datetime.datetime.now()
