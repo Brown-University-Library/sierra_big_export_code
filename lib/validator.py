@@ -41,7 +41,7 @@ class FileChecker( object ):
         for file_path in marc_file_list:
             size_in_bytes = os.path.getsize( file_path )
             validity = self.open_and_check_file( file_path )
-            if validity == False and size_in_bytes > 1000:
+            if validity == False and size_in_bytes > (1000 * 100):  # files over 100K will generate a log-warning
                 log.warning( 'bad file, ```%s``` is `%s` bytes' % (file_path, size_in_bytes) )
         tracker = tracker_helper.grab_tracker_file()
         tracker_helper.update_validation_status( tracker )
