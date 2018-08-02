@@ -12,37 +12,38 @@ On this page...
 
 ### Code flow...
 
-The full set of marc records are exported from Sierra twice a week. There are three parts to this code...
+The full set of marc records are exported from Sierra twice a week. There are four parts to this code & process...
 
+1. #### Determine the last bib
 
-#### Determine the last bib
+    Currently `lib/last_bib.py` is called by a cron script a few times a day. This produces a [web-accessible json-file](https://library.brown.edu/josiah/sierra_big_exports/last_bib.json). The `id` field contains the last-bib.
 
-Currently lib/last_bib.py is called by a cron script a few times a day. This produces a json file in a web-accessible directory. One of the json fields contains the last-bib.
+2. #### Set up the tracker
 
+    The tracker is a [web-accessible json file](https://library.brown.edu/josiah/sierra_big_exports/tracker.json). Just before the main processing code is run via cron, the previous tracker is deleted via a separate cron-job. When the main processing code is run via its cron-job, the tracker is checked.
+    - The first check is to see if it exists. If it doesn't exist, it's created.
+    - The second check is to see if it contains a last bib. If it doesn't, the last bib is grabbed from the web-accessible last_bib.json url described above.
+    - The third check is to see if batches have been created. If they haven't been, the tracker uses the last-bib to determine the full-range of bibs, then creates the batches of bib sub-ranges respecting the 2000-bib-range limit for the api.
 
-#### Set up the tracker
+3. #### Query the api
 
-Just before the main processing code is run via cron, the previous tracker is deleted via a separate cron-job. When the main processing code is run via its cron-job, the tracker is checked.
-- The first check is to see if it exists. If it doesn't exist, it's created.
-- The second check is to see if it contains a last bib. If it doesn't, the last bib is grabbed from the web-accessible last_bib.json url described above.
-- The third check is to see if batches have been created. If they haven't been, the tracker uses the last-bib to determine the full-range of bibs, then creates the batches of bib sub-ranges respecting the 2000-bib-range limit for the api.
+    - The 'next-batch' bib-range is grabbed from the tracker.
+    - The api is queried on the bib-range.
+    - The api returns a file-url for the specified bib-range.
+    - The file-url is accessed and the file is saved to the target directory with a unique name.
+    - The tracker is updated indicating that batch is complete.
+    - The script gets the 'next-batch' bib-range from the tracker, and the cycle continues.
 
+4. #### Validate the marc files
 
-#### Query the api
-
-- The 'next-batch' bib-range is grabbed from the tracker.
-- The api is queried on the bib-range.
-- The api returns a file-url for the specified bib-range.
-- The file-url is accessed and the file is saved to the target directory with a unique name.
-- The tracker is updated indicating that batch is complete.
-- The script gets the 'next-batch' bib-range from the tracker, and the cycle continues.
+    Some of the downloaded *.mrc files aren't actually marc, but instead contain status information from the api. This step goes through each record and moves any invalid *.mrc file to a *.txt file.
 
 
 #### Notes
 
 - This code is used by...
     - new-Josiah
-        - A fourth step occurs: The processing of the marc-files to extract updates. This is currently accomplished via old code in a private repostory. Those 'update-marc-files' are saved into a directory where a final fifth step occurs. Ruby traject code (in a separate repository) processes each of the update-marc-files, flowing extracted data into solr.
+        - A fifth step occurs: The processing of the marc-files to extract updates. This is currently accomplished via old code in a private repostory. Those 'update-marc-files' are saved into a directory where a final sixth step occurs. Ruby traject code (in a separate repository) processes each of the update-marc-files, flowing extracted data into solr.
     - tech-services reports ([code](https://github.com/birkin/ts_reporting_project))
         - A cron script triggers code that runs through these marc-files and updates db tables for the web-app.
 
