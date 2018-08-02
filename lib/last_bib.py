@@ -89,7 +89,8 @@ stored_lastbib = None
 try:
     with open( LASTBIB_JSON_PATH ) as f:
         stored_lastbib_data = json.loads( f.read() )
-        stored_lastbib = stored_lastbib_data['entries'][0]['id']
+        # stored_lastbib = stored_lastbib_data['entries'][0]['id']
+        stored_lastbib = stored_lastbib_data['id']
     log.debug( 'stored_lastbib, `%s`' % stored_lastbib )
 except Exception as e:
     log.error( 'exception getting stored_lastbib, ```%s```' % str(e) )
