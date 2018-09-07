@@ -132,10 +132,15 @@ class Tester( object ):
             raise Exception( message )
         filepath = '%s/%s' % ( self.FILE_DOWNLOAD_DIR, file_name )
         log.debug( 'filepath, ```%s```' % filepath )
-        with open(filepath, 'wb') as file_handler:
-            for chunk in r.iter_content( chunk_size=128 ):
-                file_handler.write( chunk )
-        log.debug( 'file written to ```%s```' % filepath )
+        try:
+            with open(filepath, 'wb') as file_handler:
+                for chunk in r.iter_content( chunk_size=128 ):
+                    file_handler.write( chunk )
+                log.debug( 'file written to ```%s```' % filepath )
+        except Exception as e:
+            message = 'exception writing file, ```%s```; raising Exception' % e
+            log.error( message )
+            raise Exception( message )
         return
 
     ## end of Tester()
