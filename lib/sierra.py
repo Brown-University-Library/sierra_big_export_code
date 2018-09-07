@@ -27,13 +27,30 @@ class MarcHelper( object ):
     def get_token( self ):
         """ Gets API token.
             Called by controller.download_file() """
+        token = 'init'
         token_url = '%stoken' % self.API_ROOT_URL
         log.debug( 'token_url, ```%s```' % token_url )
-        r = requests.post( token_url, auth=HTTPBasicAuth(self.HTTPBASIC_KEY, self.HTTPBASIC_SECRET) )
-        log.debug( 'token r.content, ```%s```' % r.content )
-        token = r.json()['access_token']
-        log.debug( 'token, ```%s```' % token )
-        return token
+        try:
+            r = requests.post( token_url, auth=HTTPBasicAuth(self.HTTPBASIC_KEY, self.HTTPBASIC_SECRET), timeout=20 )
+            log.debug( 'token r.content, ```%s```' % r.content )
+            token = r.json()['access_token']
+            log.debug( 'token, ```%s```' % token )
+            return token
+        except Exception as e:
+            message = 'exception getting token, ```%s```' % str(e)
+            log.error( message )
+            raise Exception( message )
+
+    # def get_token( self ):
+    #     """ Gets API token.
+    #         Called by controller.download_file() """
+    #     token_url = '%stoken' % self.API_ROOT_URL
+    #     log.debug( 'token_url, ```%s```' % token_url )
+    #     r = requests.post( token_url, auth=HTTPBasicAuth(self.HTTPBASIC_KEY, self.HTTPBASIC_SECRET) )
+    #     log.debug( 'token r.content, ```%s```' % r.content )
+    #     token = r.json()['access_token']
+    #     log.debug( 'token, ```%s```' % token )
+    #     return token
 
     def initiate_bibrange_request( self, token, next_batch ):
         """ Makes request that returns the marc file url.
