@@ -48,19 +48,21 @@ class Tester( object ):
     def manage_download( self ):
         """ Shot-maker.
             Called by if/main() """
-        bib_range = ( 2160000, 2162000 )
+        bib_range = ( 2160000, 2162000 )  # no records
+        # bib_range = ( 2158000, 2160000 )  # has records
         try:
             token = self.get_token()
             ( file_url, err ) = self.make_bibrange_request( token, bib_range )
-            try:
-                bibrange_response_dct = json.loads( err )
-                if bibrange_response_dct.get( 'outputRecords' ) == 0:
-                    file_name = '%s_file.mrc' % str( datetime.datetime.now() ).replace( ' ', 'T' )
-                    self.save_file( err, file_name)
-            except Exception as e:
-                message = 'problem reading error as json, ```%s``; raising Exception'
-                log.error( message )
-                raise Exception( message )
+            if err:
+                try:
+                    bibrange_response_dct = json.loads( err )
+                    if bibrange_response_dct.get( 'outputRecords' ) == 0:
+                        file_name = '%s_file.mrc' % str( datetime.datetime.now() ).replace( ' ', 'T' )
+                        self.save_file( err, file_name)
+                except Exception as e:
+                    message = 'problem reading error as json, ```%s``; raising Exception'
+                    log.error( message )
+                    raise Exception( message )
             if file_url:
                 file_name = '%s_file.mrc' % str( datetime.datetime.now() ).replace( ' ', 'T' )
                 self.grab_file( token, file_url, file_name )
