@@ -62,13 +62,27 @@ def check_tracker_file():
 def download_file( next_batch, tracker ):
     """ Initiates production of marc file, then downloads it.
         Called by run_loop_work() """
-    token = marc_helper.get_token()
-    # marc_file_url = marc_helper.initiate_bibrange_request( token, next_batch )
-    marc_file_url = marc_helper.make_bibrange_request( token, next_batch )
-    marc_helper.grab_file( token, marc_file_url, next_batch['file_name'] )
-    tracker_helper.update_tracker( next_batch, tracker )
-    log.debug( 'download complete' )
+    try:
+        token = marc_helper.get_token()
+        marc_file_url = marc_helper.make_bibrange_request( token, next_batch )
+        marc_helper.grab_file( token, marc_file_url, next_batch['file_name'] )
+        tracker_helper.update_tracker( next_batch, tracker )
+        log.debug( 'download complete' )
+    except Exception as e:
+        message = 'exeption, ```%s```' % e
+        log.error( message )
+        raise Exception( message )
     return
+
+# def download_file( next_batch, tracker ):
+#     """ Initiates production of marc file, then downloads it.
+#         Called by run_loop_work() """
+#     token = marc_helper.get_token()
+#     marc_file_url = marc_helper.make_bibrange_request( token, next_batch )
+#     marc_helper.grab_file( token, marc_file_url, next_batch['file_name'] )
+#     tracker_helper.update_tracker( next_batch, tracker )
+#     log.debug( 'download complete' )
+#     return
 
 
 if __name__ == '__main__':
