@@ -39,6 +39,7 @@ def manage_download():
     tracker = check_tracker_file()
     processing_duration = datetime.datetime.now() + datetime.timedelta( minutes=LOOP_DURATION_IN_MINUTES )
     while datetime.datetime.now() < processing_duration:
+        log.debug( '\n-------\nstarting next batch entry' )
         next_batch = tracker_helper.get_next_batch( tracker )
         if next_batch:
             download_file( next_batch, tracker )
@@ -62,17 +63,19 @@ def check_tracker_file():
 def download_file( next_batch, tracker ):
     """ Initiates production of marc file, then downloads it.
         Called by run_loop_work() """
-    try:
-        token = marc_helper.get_token()
-        marc_file_url = marc_helper.make_bibrange_request( token, next_batch )
+    token = marc_helper.get_token()
+    ( marc_file_url, err ) = marc_helper.make_bibrange_request( token, next_batch )
+    if err:
+        handled_check = marc_helper.handle_bib_range_request_err( err, next_batch['file_name'] )
+        if handled_check == 'success':
+            tracker_helper.update_tracker( next_batch, tracker )
+    if marc_file_url:
         marc_helper.grab_file( token, marc_file_url, next_batch['file_name'] )
         tracker_helper.update_tracker( next_batch, tracker )
-        log.debug( 'download complete' )
-    except Exception as e:
-        message = 'exeption, ```%s```' % e
-        log.error( message )
-        raise Exception( message )
+    log.debug( 'download complete' )
     return
+
+
 
 # def download_file( next_batch, tracker ):
 #     """ Initiates production of marc file, then downloads it.

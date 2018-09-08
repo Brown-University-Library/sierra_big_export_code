@@ -51,22 +51,32 @@ class MarcHelper( object ):
         log.debug( 'payload, ```%s```' % payload )
         custom_headers = {'Authorization': 'Bearer %s' % token }
         r = requests.get( marc_url, headers=custom_headers, params=payload, timeout=30 )
-        file_url = self.assess_bibrange_response( r )
-        return file_url
+        ( file_url, err ) = self.assess_bibrange_response( r )
+        log.debug( 'returning file_url, ```%s```' % file_url )
+        log.debug( 'returning err, ```%s```' % err )
+        return ( file_url, err )
 
     def assess_bibrange_response( self, r ):
         """ Analyzes bib-range response.
             Called by make_bibrange_request() """
         log.debug( 'r.status_code, `%s`' % r.status_code )
         log.debug( 'bib r.content, ```%s```' % r.content )
+        file_url = err = None
         if r.status_code is not 200:
             message = 'bad status code; raising Exception'
             log.error( message )
             raise Exception( message )
+
+        if r.json().get( 'outputRecords', None ) == 0:
+            log.info( 'no records found for this bib-range, returning bib-range-response' )
+            err = r.content
+            return ( file_url, err )
+
         file_url = r.json().get( 'file', None )
         if file_url:
             log.debug( 'normal file_url found, it is ```%s```' % file_url )
-            return file_url
+            return ( file_url, err )
+
         if r.json().get( 'name', None ) == 'Rate exceeded for endpoint':
             message = 'problem: ```Rate exceeded for endpoint; raising Exception```'
             log.error( message )
@@ -78,7 +88,23 @@ class MarcHelper( object ):
         message = 'problem, no file-url or known problem -- check r.content and handle; raising Exception'
         log.error( message )
         raise Exception( message )
-        return
+
+
+
+    def handle_bib_range_request_err( self, err, file_name ):
+        """ Handles known bib-range-response problem that should not stop processing.
+            Called by: controller.download_file() """
+        try:
+            bibrange_response_dct = json.loads( err )
+            if bibrange_response_dct.get( 'outputRecords' ) == 0:
+                self.save_file( err, file_name)
+        except Exception as e:
+            message = 'problem reading error as json, ```%s``; raising Exception' % e
+            log.error( message )
+            raise Exception( message )
+        return 'success'  # checked to determine whether to update tracker
+
+
 
     def grab_file( self, token, file_url, file_name ):
         """ Downloads file.
@@ -103,5 +129,24 @@ class MarcHelper( object ):
             log.error( message )
             raise Exception( message )
         return
+
+
+
+    def save_file( self, err_output, file_name ):
+        """ Saves file.
+            Called by manage_download() """
+        filepath = '%s/%s' % ( self.FILE_DOWNLOAD_DIR, file_name )
+        log.debug( 'filepath, ```%s```' % filepath )
+        try:
+            with open(filepath, 'wb') as file_handler:
+                file_handler.write( err_output )
+                log.debug( 'file written to ```%s```' % filepath )
+        except Exception as e:
+            message = 'exception writing error-output file, ```%s```; raising Exception' % e
+            log.error( message )
+            raise Exception( message )
+        return
+
+
 
     ## end of MarcHelper()
