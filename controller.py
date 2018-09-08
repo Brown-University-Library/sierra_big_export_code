@@ -18,8 +18,8 @@ logging.basicConfig(
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("requests.packages.urllib3").setLevel(logging.WARNING)
 log = logging.getLogger(__name__)
-log.propagate = False
-log.debug( '\n-------\nstarting log' )
+log.propagate = True
+
 
 if (sys.version_info < (3, 0)):
     raise Exception( 'forcing myself to use python3 always' )
@@ -72,6 +72,6 @@ def download_file( next_batch, tracker ):
 
 
 if __name__ == '__main__':
-    log.debug( 'starting' )
+    log.debug( '\n-------\nstarting `main`' )
     manage_download()
-    log.debug( 'complete' )
+    log.debug( '`main` complete\n-------\n' )
