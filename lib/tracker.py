@@ -56,26 +56,6 @@ class TrackerHelper( object ):
         log.debug( 'deletion-step complete' )
         return
 
-    # def check_tracker_lastbib( self, tracker):
-    #     """ Obtains last bib if it doesn't already exist.
-    #         Called by controller.check_tracker_file() """
-    #     last_bib = tracker.get( 'last_bib', None )
-    #     if last_bib is None:
-    #         try:
-    #             r = requests.get( self.LASTBIB_URL, timeout=10 )
-    #             last_bib = r.json()['id']
-    #         except Exception as e:
-    #             message = 'problem getting last bib, ```%s```; raising Exception' % e
-    #             log.error( message )
-    #             raise Exception( message)
-    #         log.debug( 'last_bib, `%s`' % last_bib )
-    #         tracker['last_bib'] = last_bib
-    #         tracker['last_updated'] = datetime.datetime.now().isoformat()
-    #         with open(self.TRACKER_FILEPATH, 'wb') as f:
-    #             f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
-    #     log.debug( 'tracker[-500], ```%s```' % pprint.pformat(tracker)[-500:] + '...' )
-    #     return tracker
-
     def check_tracker_lastbib( self, tracker):
         """ Obtains last bib if it doesn't already exist.
             Called by controller.check_tracker_file() """
@@ -103,15 +83,28 @@ class TrackerHelper( object ):
         log.debug( 'last_bib, `%s`' % last_bib )
         return last_bib
 
+    # def check_tracker_batches( self, tracker, start_bib, end_bib ):
+    #     """ Checks for batches and creates them if they don't exist.
+    #         Called by check_tracker_file() """
+    #     if tracker['batches']:
+    #         return
+    #     tracker = self.prepare_tracker_batches( tracker, start_bib, end_bib )
+    #     with open(self.TRACKER_FILEPATH, 'wb') as f:
+    #         f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
+    #     log.debug( 'tracker, ```%s```' % pprint.pformat(tracker)[-500:] + '...' )
+    #     return tracker
+
     def check_tracker_batches( self, tracker, start_bib, end_bib ):
         """ Checks for batches and creates them if they don't exist.
             Called by check_tracker_file() """
-        if tracker['batches']:
+        if tracker.get('batches', None) and len(tracker['batches']) > 0:
             return
+        log.debug( 'no batches in tracker; will add')
+        tracker['batches'] = []
         tracker = self.prepare_tracker_batches( tracker, start_bib, end_bib )
         with open(self.TRACKER_FILEPATH, 'wb') as f:
             f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
-        log.debug( 'tracker, ```%s```' % pprint.pformat(tracker)[-500:] + '...' )
+        log.debug( 'tracker[-500:], ```%s```' % pprint.pformat(tracker)[-500:] + '...' )
         return tracker
 
     def prepare_tracker_batches( self, tracker, start_bib, end_bib ):
@@ -127,7 +120,7 @@ class TrackerHelper( object ):
             chunk_end_bib += 2000
             file_count += 1
         tracker['last_updated'] = datetime.datetime.now().isoformat()
-        log.debug( 'tracker, ```%s```' % pprint.pformat(tracker)[-500:] + '...' )
+        log.debug( 'tracker[-500:], ```%s```' % pprint.pformat(tracker)[-500:] + '...' )
         return tracker
 
     def get_next_batch( self, tracker ):
