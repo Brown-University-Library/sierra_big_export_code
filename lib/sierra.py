@@ -41,35 +41,6 @@ class MarcHelper( object ):
             log.error( message )
             raise Exception( message )
 
-    # def get_token( self ):
-    #     """ Gets API token.
-    #         Called by controller.download_file() """
-    #     token_url = '%stoken' % self.API_ROOT_URL
-    #     log.debug( 'token_url, ```%s```' % token_url )
-    #     r = requests.post( token_url, auth=HTTPBasicAuth(self.HTTPBASIC_KEY, self.HTTPBASIC_SECRET) )
-    #     log.debug( 'token r.content, ```%s```' % r.content )
-    #     token = r.json()['access_token']
-    #     log.debug( 'token, ```%s```' % token )
-    #     return token
-
-    # def initiate_bibrange_request( self, token, next_batch ):
-    #     """ Makes request that returns the marc file url.
-    #         Called by controller.download_file() """
-    #     try:
-    #         file_url = self.make_bibrange_request( token, next_batch )
-    #         return file_url
-    #     except Exception as e:
-    #         log.error( 'problem initiating bibrange-request, ```%s```; napping, and will try again' % e )
-    #         time.sleep( 10 )
-    #         try:
-    #             token = self.get_token()
-    #             file_url = self.make_bibrange_request( token, next_batch )
-    #             return file_url
-    #         except Exception as e:
-    #             message = '2nd problem initiating bibrange-request, ```%s```; raising Exception' % e
-    #             log.error( message )
-    #             raise Exception( message )
-
     def make_bibrange_request( self, token, next_batch ):
         """ Forms and executes the bib-range query.
             Called by controller.download_file() """
@@ -109,31 +80,6 @@ class MarcHelper( object ):
         raise Exception( message )
         return
 
-    # def assess_bibrange_response( self, r ):
-    #     """ Analyzes bib-range response.
-    #         Called by make_bibrange_request() """
-    #     log.debug( 'r.status_code, `%s`' % r.status_code )
-    #     log.debug( 'bib r.content, ```%s```' % r.content )
-    #     if r.status_code is not 200:
-    #         message = 'bad status code; raising Exception'
-    #         log.error( message )
-    #         raise Exception( message )
-    #     file_url = r.json().get( 'file', None )
-    #     if file_url:
-    #         log.debug( 'normal file_url found, it is ```%s```' % file_url )
-    #         return file_url
-    #     if r.json().get( 'name', None ) == 'Rate exceeded for endpoint':
-    #         message = 'problem: ```Rate exceeded for endpoint; raising Exception```'
-    #         log.error( message )
-    #         raise Exception( message )
-    #     elif r.json().get( 'name', None ) == 'External Process Failed':
-    #         log.debug( 'returning bad-param file_url, ```%s```' % self.INVALID_PARAM_FILE_URL )
-    #         file_url = self.INVALID_PARAM_FILE_URL
-    #         return file_url
-    #     else:
-    #         message = 'exception: see logs'
-    #         raise Exception( message )
-
     def grab_file( self, token, file_url, file_name ):
         """ Downloads file.
             Called by controller.download_file() """
@@ -158,18 +104,4 @@ class MarcHelper( object ):
             raise Exception( message )
         return
 
-    # def grab_file( self, token, file_url, file_name ):
-    #     """ Downloads file.
-    #         Called by controller.download_file() """
-    #     custom_headers = {'Authorization': 'Bearer %s' % token }
-    #     r = requests.get( file_url, headers=custom_headers )
-    #     filepath = '%s/%s' % ( self.FILE_DOWNLOAD_DIR, file_name )
-    #     with open(filepath, 'wb') as file_handler:
-    #         for chunk in r.iter_content( chunk_size=128 ):
-    #             file_handler.write( chunk )
-    #     log.debug( 'file written to ```%s```' % filepath )
-    #     return
-
     ## end of MarcHelper()
-
-
