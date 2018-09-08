@@ -24,27 +24,14 @@ class TrackerHelper( object ):
         self.last_bibber = LastBibHelper()
         self.FILE_DOWNLOAD_DIR = os.environ['SBE__FILE_DOWNLOAD_DIR']
 
-    # def grab_tracker_file( self ):
-    #     """ Returns (creates if necessary) tracker from json file.
-    #         Called by controller.check_tracker_file() """
-    #     try:
-    #         with open(self.TRACKER_FILEPATH, 'rb') as f:
-    #             tracker = json.loads( f.read() )
-    #     except:
-    #         with open(self.TRACKER_FILEPATH, 'wb') as f:
-    #             tracker = {
-    #                 'last_updated': str(datetime.datetime.now()), 'last_bib': None, 'batches': [], 'files_validated': False }
-    #             f.write( json.dumps(tracker, sort_keys=True, indent=2).encode('utf-8') )
-    #     log.debug( 'tracker, ```%s```' % pprint.pformat(tracker)[-500:] + '...' )
-    #     return tracker
-
     def grab_tracker_file( self ):
         """ Returns (creates if necessary) tracker from json file.
             Called by controller.check_tracker_file() """
         try:
             with open(self.TRACKER_FILEPATH, 'rb') as f:
                 tracker = json.loads( f.read() )
-        except:
+        except Exception as e:
+            log.warning( 'problem getting tracker file, ```%s```; will clear download-directory and creating tracker file' % e )
             self.clear_download_directory()
             with open(self.TRACKER_FILEPATH, 'wb') as f:
                 tracker = {
