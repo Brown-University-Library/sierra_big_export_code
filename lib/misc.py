@@ -28,8 +28,8 @@ class Tester( object ):
         """ Shot-maker.
             Called by if/main() """
         # bib_range = ( 2158000, 2160000 )  # has records
-        # bib_range = ( 2160000, 2162000 )  # no records
-        bib_range = ( 5470000, 5472000 )  # `External Process Failed`
+        # bib_range = ( 2160000, 2162000 )  # no records (continue)
+        bib_range = ( 5470000, 5472000 )  # `External Process Failed` (continue)
         try:
             token = self.get_token()
             ( file_url, err ) = self.make_bibrange_request( token, bib_range )
@@ -97,16 +97,20 @@ class Tester( object ):
         if r.status_code == 500:
             try:
                 response_message = r.json()['name']
-                if response_message  == 'External Process Failed':
-                    log.warning( 'found response "%s"; returning this bib-range-response to continue' % response_message )
-                    err = r.content
-                    return ( file_url, err )
-                elif response_message  == 'Rate exceeded for endpoint':
-                    log.warning( 'found response "%s"; returning this bib-range-response to continue' % response_message )
-                    err = r.content
-                    return ( file_url, err )
             except Exception as e:
                 message = 'could not read response-message, ```%s```; raising Exception' % e
+                log.error( message )
+                raise Exception( message )
+            if response_message  == 'External Process Failed': ## the failure happens reliably on certain bib-ranges. TODO: ask iii why, but continue for now
+                log.warning( 'found response "%s"; returning this bib-range-response to continue' % response_message )
+                err = r.content
+                return ( file_url, err )
+            elif response_message  == 'Rate exceeded for endpoint':  ## don't continue; stop until cron re-initiates
+                message = 'found response "%s"; raising Exception' % response_message
+                log.error( message )
+                raise Exception( message )
+            else:
+                message = 'unhandled bib-range-response found, ```%s```; raising Exception' % response_message
                 log.error( message )
                 raise Exception( message )
         #
@@ -136,8 +140,8 @@ class Tester( object ):
                 log.error( message )
                 raise Exception( message )
         #
-        if r.status_code is not 200 and status_code is not 500:
-            message = 'bad status code; raising Exception'
+        if r.status_code is not 200 and r.status_code is not 500:
+            message = 'unhandled status code, `%s`; raising Exception' % r.status_code
             log.error( message )
             raise Exception( message )
 
