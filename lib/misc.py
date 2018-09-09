@@ -48,15 +48,19 @@ class Tester( object ):
     def manage_download( self ):
         """ Shot-maker.
             Called by if/main() """
-        bib_range = ( 2160000, 2162000 )  # no records
         # bib_range = ( 2158000, 2160000 )  # has records
+        # bib_range = ( 2160000, 2162000 )  # no records
+        bib_range = ( 5470000, 5472000 )  # `External Process Failed`
         try:
             token = self.get_token()
             ( file_url, err ) = self.make_bibrange_request( token, bib_range )
             if err:
                 try:
                     bibrange_response_dct = json.loads( err )
-                    if bibrange_response_dct.get( 'outputRecords' ) == 0:
+                    if bibrange_response_dct.get( 'outputRecords', None ) == 0:
+                        file_name = '%s_file.mrc' % str( datetime.datetime.now() ).replace( ' ', 'T' )
+                        self.save_file( err, file_name)
+                    elif bibrange_response_dct.get( 'name', None ) == 'External Process Failed' or bibrange_response_dct.get( 'name', None ) == 'Rate exceeded for endpoint':
                         file_name = '%s_file.mrc' % str( datetime.datetime.now() ).replace( ' ', 'T' )
                         self.save_file( err, file_name)
                 except Exception as e:
@@ -131,58 +135,53 @@ class Tester( object ):
         log.debug( 'r.status_code, `%s`' % r.status_code )
         log.debug( 'bib r.content, ```%s```' % r.content )
         file_url = err = None
-        if r.status_code is not 200:
+        #
+        if r.status_code == 500:
+            try:
+                response_message = r.json()['name']
+                if response_message  == 'External Process Failed':
+                    log.warning( 'found response "%s"; returning this bib-range-response to continue' % response_message )
+                    err = r.content
+                    return ( file_url, err )
+                elif response_message  == 'Rate exceeded for endpoint':
+                    log.warning( 'found response "%s"; returning this bib-range-response to continue' % response_message )
+                    err = r.content
+                    return ( file_url, err )
+            except Exception as e:
+                message = 'could not read response-message, ```%s```; raising Exception' % e
+                log.error( message )
+                raise Exception( message )
+        #
+        if r.status_code == 200:
+            try:
+                data_dct = r.json()
+            except Exception as e:
+                message = 'response not json, ```%s```; raising Exception'
+                log.error( message )
+                raise Exception( message )
+            try:
+                if data_dct['outputRecords'] == 0:
+                    log.info( 'no records found for this bib-range, returning bib-range-response to continue' )
+                    err = r.content
+                    return ( file_url, err )
+            except Exception as e:
+                message = '`outputrecords` not found in response; exception is ```%s```; raising Exception' % e
+                log.error( message )
+                raise Exception( message )
+            try:  # happy-path
+                file_url = data_dct['file']
+                if file_url:
+                    log.debug( 'normal file_url found, it is ```%s```' % file_url )
+                    return ( file_url, err )
+            except Exception as e:
+                message = '`file` not found in response; exception is ```%s```; raising Exception' % e
+                log.error( message )
+                raise Exception( message )
+        #
+        if r.status_code is not 200 and status_code is not 500:
             message = 'bad status code; raising Exception'
             log.error( message )
             raise Exception( message )
-
-        if r.json().get( 'outputRecords', None ) == 0:
-            log.info( 'no records found for this bib-range, returning bib-range-response' )
-            err = r.content
-            return ( file_url, err )
-
-        file_url = r.json().get( 'file', None )
-        if file_url:
-            log.debug( 'normal file_url found, it is ```%s```' % file_url )
-            return ( file_url, err )
-
-        if r.json().get( 'name', None ) == 'Rate exceeded for endpoint':
-            message = 'problem: ```Rate exceeded for endpoint; raising Exception```'
-            log.error( message )
-            raise Exception( message )
-        elif r.json().get( 'name', None ) == 'External Process Failed':
-            message = 'problem: ```External Process Failed; raising Exception```'
-            log.error( message )
-            raise Exception( message )
-        message = 'problem, no file-url or known problem -- check r.content and handle; raising Exception'
-        log.error( message )
-        raise Exception( message )
-
-    # def assess_bibrange_response( self, r ):
-    #     """ Analyzes bib-range response.
-    #         Called by make_bibrange_request() """
-    #     log.debug( 'r.status_code, `%s`' % r.status_code )
-    #     log.debug( 'bib r.content, ```%s```' % r.content )
-    #     if r.status_code is not 200:
-    #         message = 'bad status code; raising Exception'
-    #         log.error( message )
-    #         raise Exception( message )
-    #     file_url = r.json().get( 'file', None )
-    #     if file_url:
-    #         log.debug( 'normal file_url found, it is ```%s```' % file_url )
-    #         return file_url
-    #     if r.json().get( 'name', None ) == 'Rate exceeded for endpoint':
-    #         message = 'problem: ```Rate exceeded for endpoint; raising Exception```'
-    #         log.error( message )
-    #         raise Exception( message )
-    #     elif r.json().get( 'name', None ) == 'External Process Failed':
-    #         message = 'problem: ```External Process Failed; raising Exception```'
-    #         log.error( message )
-    #         raise Exception( message )
-    #     message = 'problem, no file-url or known problem -- check r.content and handle; raising Exception'
-    #     log.error( message )
-    #     raise Exception( message )
-    #     return
 
     def grab_file( self, token, file_url, file_name ):
         """ Downloads file.
