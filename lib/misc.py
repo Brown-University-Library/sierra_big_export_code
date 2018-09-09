@@ -14,8 +14,37 @@ log = logging.getLogger(__name__)
 log.debug( 'loading sierra module' )
 
 
+class TrackerUpdater( object ):
+    """ One-off for updating the tracker for managing processing. """
+
+    def __init__( self ):
+        self.tracker_file_path = os.environ['SBE__TEMP_TRACKER_FILE_PATH']
+
+    def make_rest_null( self ):
+        """ Finds item in list, and makes its, and rest of entries, `last_grabbed` value be `null`.
+            Called manually. """
+        target_last_grabbed_value = '2018-09-08T21:34:41.040808'
+        jstring = 'init'
+        with open( self.tracker_file_path, 'r' ) as file_handler:
+            jdct = json.loads( file_handler.read() )
+            batches = jdct['batches']
+            update_flag = 'off'
+            for entry_dct in batches:
+                if update_flag == 'on':
+                    entry_dct['last_grabbed'] = None
+                elif update_flag == 'off' and entry_dct['last_grabbed'] == target_last_grabbed_value:
+                    entry_dct['last_grabbed'] = None
+                    update_flag = 'on'
+                else:
+                    pass
+            jstring = json.dumps( jdct, sort_keys=True, indent=2 )
+        with open( self.tracker_file_path, 'w' ) as write_file_handler:
+            write_file_handler.write( jstring )
+        return
+
+
 class Tester( object ):
-    """ Bundles together some functions for calling directly for testing.
+    """ Bundles together some functions for hitting the Sierra-API for testing.
         Not called by other code, but via `$ python3 ./misc.py` """
 
     def __init__( self ):
@@ -185,7 +214,7 @@ class Tester( object ):
             raise Exception( message )
         return
 
-    ## end of Tester()
+    ## end Tester()
 
 
 if __name__ == '__main__':
