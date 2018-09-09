@@ -56,39 +56,60 @@ class MarcHelper( object ):
         log.debug( 'returning err, ```%s```' % err )
         return ( file_url, err )
 
+
     # def assess_bibrange_response( self, r ):
     #     """ Analyzes bib-range response.
     #         Called by make_bibrange_request() """
     #     log.debug( 'r.status_code, `%s`' % r.status_code )
     #     log.debug( 'bib r.content, ```%s```' % r.content )
     #     file_url = err = None
-    #     if r.status_code is not 200:
+    #     #
+    #     if r.status_code == 500:
+    #         try:
+    #             response_message = r.json()['name']
+    #             if response_message  == 'External Process Failed':
+    #                 log.warning( 'found response "%s"; returning this bib-range-response to continue' % response_message )
+    #                 err = r.content
+    #                 return ( file_url, err )
+    #             elif response_message  == 'Rate exceeded for endpoint':
+    #                 log.warning( 'found response "%s"; returning this bib-range-response to continue' % response_message )
+    #                 err = r.content
+    #                 return ( file_url, err )
+    #         except Exception as e:
+    #             message = 'could not read response-message, ```%s```; raising Exception' % e
+    #             log.error( message )
+    #             raise Exception( message )
+    #     #
+    #     if r.status_code == 200:
+    #         try:
+    #             data_dct = r.json()
+    #         except Exception as e:
+    #             message = 'response not json, ```%s```; raising Exception'
+    #             log.error( message )
+    #             raise Exception( message )
+    #         try:
+    #             if data_dct['outputRecords'] == 0:
+    #                 log.info( 'no records found for this bib-range, returning bib-range-response to continue' )
+    #                 err = r.content
+    #                 return ( file_url, err )
+    #         except Exception as e:
+    #             message = '`outputrecords` not found in response; exception is ```%s```; raising Exception' % e
+    #             log.error( message )
+    #             raise Exception( message )
+    #         try:  # happy-path
+    #             file_url = data_dct['file']
+    #             if file_url:
+    #                 log.debug( 'normal file_url found, it is ```%s```' % file_url )
+    #                 return ( file_url, err )
+    #         except Exception as e:
+    #             message = '`file` not found in response; exception is ```%s```; raising Exception' % e
+    #             log.error( message )
+    #             raise Exception( message )
+    #     #
+    #     if r.status_code is not 200 and status_code is not 500:
     #         message = 'bad status code; raising Exception'
     #         log.error( message )
     #         raise Exception( message )
-
-    #     if r.json().get( 'outputRecords', None ) == 0:
-    #         log.info( 'no records found for this bib-range, returning bib-range-response' )
-    #         err = r.content
-    #         return ( file_url, err )
-
-    #     file_url = r.json().get( 'file', None )
-    #     if file_url:
-    #         log.debug( 'normal file_url found, it is ```%s```' % file_url )
-    #         return ( file_url, err )
-
-    #     if r.json().get( 'name', None ) == 'Rate exceeded for endpoint':
-    #         message = 'problem: ```Rate exceeded for endpoint; raising Exception```'
-    #         log.error( message )
-    #         raise Exception( message )
-    #     elif r.json().get( 'name', None ) == 'External Process Failed':
-    #         message = 'problem: ```External Process Failed; raising Exception```'
-    #         log.error( message )
-    #         raise Exception( message )
-    #     message = 'problem, no file-url or known problem -- check r.content and handle; raising Exception'
-    #     log.error( message )
-    #     raise Exception( message )
-
 
 
     def assess_bibrange_response( self, r ):
@@ -101,16 +122,20 @@ class MarcHelper( object ):
         if r.status_code == 500:
             try:
                 response_message = r.json()['name']
-                if response_message  == 'External Process Failed':
-                    log.warning( 'found response "%s"; returning this bib-range-response to continue' % response_message )
-                    err = r.content
-                    return ( file_url, err )
-                elif response_message  == 'Rate exceeded for endpoint':
-                    log.warning( 'found response "%s"; returning this bib-range-response to continue' % response_message )
-                    err = r.content
-                    return ( file_url, err )
             except Exception as e:
                 message = 'could not read response-message, ```%s```; raising Exception' % e
+                log.error( message )
+                raise Exception( message )
+            if response_message  == 'External Process Failed':
+                log.warning( 'found response "%s"; returning this bib-range-response to continue' % response_message )
+                err = r.content
+                return ( file_url, err )
+            elif response_message  == 'Rate exceeded for endpoint':  ## don't continue; stop until cron re-initiates
+                message = 'found response "%s"; raising Exception' % response_message
+                log.error( message )
+                raise Exception( message )
+            else:
+                message = 'unhandled bib-range-response found, ```%s```; raising Exception' % response_message
                 log.error( message )
                 raise Exception( message )
         #
@@ -140,29 +165,45 @@ class MarcHelper( object ):
                 log.error( message )
                 raise Exception( message )
         #
-        if r.status_code is not 200 and status_code is not 500:
-            message = 'bad status code; raising Exception'
+        if r.status_code is not 200 and r.status_code is not 500:
+            message = 'unhandled status code, `%s`; raising Exception' % r.status_code
             log.error( message )
             raise Exception( message )
-
 
 
     def handle_bib_range_request_err( self, err, file_name ):
         """ Handles known bib-range-response problem that should not stop processing.
             Called by: controller.download_file() """
+        handled_check = 'failure'
         try:
             bibrange_response_dct = json.loads( err )
-            if bibrange_response_dct.get( 'outputRecords' ) == 0:
-                self.save_file( err, file_name)
-            elif bibrange_response_dct.get( 'name', None ) == 'External Process Failed' or bibrange_response_dct.get( 'name', None ) == 'Rate exceeded for endpoint':
-                self.save_file( err, file_name)
-            return 'success'  # checked to determine whether to update tracker
         except Exception as e:
             message = 'problem reading error as json, ```%s``; raising Exception' % e
             log.error( message )
             raise Exception( message )
+        if bibrange_response_dct.get( 'outputRecords', None ) == 0:
+            self.save_file( err, file_name)
+            handled_check = 'success'
+        elif bibrange_response_dct.get( 'name', None ) == 'External Process Failed':
+            self.save_file( err, file_name)
+            handled_check = 'success'
+        return handled_check  # checked to determine whether to update tracker
 
 
+    # def handle_bib_range_request_err( self, err, file_name ):
+    #     """ Handles known bib-range-response problem that should not stop processing.
+    #         Called by: controller.download_file() """
+    #     try:
+    #         bibrange_response_dct = json.loads( err )
+    #         if bibrange_response_dct.get( 'outputRecords' ) == 0:
+    #             self.save_file( err, file_name)
+    #         elif bibrange_response_dct.get( 'name', None ) == 'External Process Failed' or bibrange_response_dct.get( 'name', None ) == 'Rate exceeded for endpoint':
+    #             self.save_file( err, file_name)
+    #         return 'success'  # checked to determine whether to update tracker
+    #     except Exception as e:
+    #         message = 'problem reading error as json, ```%s``; raising Exception' % e
+    #         log.error( message )
+    #         raise Exception( message )
 
 
     def grab_file( self, token, file_url, file_name ):
