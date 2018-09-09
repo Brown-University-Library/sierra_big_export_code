@@ -24,27 +24,6 @@ class Tester( object ):
         self.HTTPBASIC_SECRET = os.environ['SBE__HTTPBASIC_PASSWORD']
         self.FILE_DOWNLOAD_DIR = os.environ['SBE__FILE_DOWNLOAD_DIR']
 
-    # def manage_download( self ):
-    #     """ Shot-maker.
-    #         Called by if/main() """
-    #     bib_range = ( 2160000, 2162000 )
-    #     try:
-    #         token = self.get_token()
-    #         file_url = self.make_bibrange_request( token, bib_range )
-    #         if file_url:
-    #             file_name = '%s_file.mrc' % str( datetime.datetime.now() ).replace( ' ', 'T' )
-    #             self.grab_file( token, file_url, file_name )
-    #     except Exception as e:
-    #         log.error( 'initial exception, ```%s```' % str(e) )
-    #         time.sleep( 5 )
-    #         log.debug( '\nslept 5 seconds' )
-    #         token = self.get_token()
-    #         file_url = self.make_bibrange_request( token, bib_range )
-    #         if file_url:
-    #             file_name = '%s_file.mrc' % str( datetime.datetime.now() ).replace( ' ', 'T' )
-    #             self.grab_file( token, file_url, file_name )
-    #     return
-
     def manage_download( self ):
         """ Shot-maker.
             Called by if/main() """
@@ -74,13 +53,6 @@ class Tester( object ):
             message = 'exeption, ```%s```' % e
             log.error( message )
             raise Exception( message )
-            # time.sleep( 5 )
-            # log.debug( '\nslept 5 seconds' )
-            # token = self.get_token()
-            # file_url = self.make_bibrange_request( token, bib_range )
-            # if file_url:
-            #     file_name = '%s_file.mrc' % str( datetime.datetime.now() ).replace( ' ', 'T' )
-            #     self.grab_file( token, file_url, file_name )
         return
 
     def get_token( self ):
@@ -99,20 +71,6 @@ class Tester( object ):
             log.error( message )
             raise Exception( message )
         return token
-
-    # def make_bibrange_request( self, token, bib_range ):
-    #     """ Forms and executes the bib-range query.
-    #         Called by manage_download() """
-    #     start_bib = bib_range[0]
-    #     end_bib = bib_range[1]
-    #     marc_url = '%sbibs/marc' % self.API_ROOT_URL
-    #     payload = { 'id': '[%s,%s]' % (start_bib, end_bib), 'limit': (end_bib - start_bib) + 1, 'mapping': 'toc' }
-    #     log.debug( 'payload, ```%s```' % payload )
-    #     custom_headers = { 'Authorization': 'Bearer %s' % token }
-    #     r = requests.get( marc_url, headers=custom_headers, params=payload, timeout=30 )
-    #     file_url = self.assess_bibrange_response( r )
-    #     log.debug( 'returning file_url, ```%s```' % file_url )
-    #     return file_url
 
     def make_bibrange_request( self, token, bib_range ):
         """ Forms and executes the bib-range query.
