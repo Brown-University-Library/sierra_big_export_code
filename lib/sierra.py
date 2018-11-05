@@ -67,16 +67,20 @@ class MarcHelper( object ):
     #     if r.status_code == 500:
     #         try:
     #             response_message = r.json()['name']
-    #             if response_message  == 'External Process Failed':
-    #                 log.warning( 'found response "%s"; returning this bib-range-response to continue' % response_message )
-    #                 err = r.content
-    #                 return ( file_url, err )
-    #             elif response_message  == 'Rate exceeded for endpoint':
-    #                 log.warning( 'found response "%s"; returning this bib-range-response to continue' % response_message )
-    #                 err = r.content
-    #                 return ( file_url, err )
     #         except Exception as e:
     #             message = 'could not read response-message, ```%s```; raising Exception' % e
+    #             log.error( message )
+    #             raise Exception( message )
+    #         if response_message  == 'External Process Failed':
+    #             log.warning( 'found response "%s"; returning this bib-range-response to continue' % response_message )
+    #             err = r.content
+    #             return ( file_url, err )
+    #         elif response_message  == 'Rate exceeded for endpoint':  ## don't continue; stop until cron re-initiates
+    #             message = 'found response "%s"; raising Exception' % response_message
+    #             log.error( message )
+    #             raise Exception( message )
+    #         else:
+    #             message = 'unhandled bib-range-response found, ```%s```; raising Exception' % response_message
     #             log.error( message )
     #             raise Exception( message )
     #     #
@@ -106,15 +110,16 @@ class MarcHelper( object ):
     #             log.error( message )
     #             raise Exception( message )
     #     #
-    #     if r.status_code is not 200 and status_code is not 500:
-    #         message = 'bad status code; raising Exception'
+    #     if r.status_code is not 200 and r.status_code is not 500:
+    #         message = 'unhandled status code, `%s`; raising Exception' % r.status_code
     #         log.error( message )
     #         raise Exception( message )
 
 
     def assess_bibrange_response( self, r ):
         """ Analyzes bib-range response.
-            Called by make_bibrange_request() """
+            Called by make_bibrange_request()
+            Note: halting script execution is a normal part of the operation of this code. """
         log.debug( 'r.status_code, `%s`' % r.status_code )
         log.debug( 'bib r.content, ```%s```' % r.content )
         file_url = err = None
@@ -124,16 +129,20 @@ class MarcHelper( object ):
                 response_message = r.json()['name']
             except Exception as e:
                 message = 'could not read response-message, ```%s```; raising Exception' % e
-                log.error( message )
-                raise Exception( message )
+                # log.error( message )
+                # raise Exception( message )
+                log.warning( message )
+                sys.exit()
             if response_message  == 'External Process Failed':
                 log.warning( 'found response "%s"; returning this bib-range-response to continue' % response_message )
                 err = r.content
                 return ( file_url, err )
             elif response_message  == 'Rate exceeded for endpoint':  ## don't continue; stop until cron re-initiates
                 message = 'found response "%s"; raising Exception' % response_message
-                log.error( message )
-                raise Exception( message )
+                # log.error( message )
+                # raise Exception( message )
+                log.warning( message )
+                sys.exit()
             else:
                 message = 'unhandled bib-range-response found, ```%s```; raising Exception' % response_message
                 log.error( message )
