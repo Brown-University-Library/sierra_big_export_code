@@ -128,7 +128,7 @@ class MarcHelper( object ):
             try:
                 response_message = r.json()['name']
             except Exception as e:
-                message = 'could not read response-message, ```%s```; raising Exception' % e
+                message = 'could not read response-message, ```%s```; will exit script' % e
                 # log.error( message )
                 # raise Exception( message )
                 log.warning( message )
@@ -138,7 +138,7 @@ class MarcHelper( object ):
                 err = r.content
                 return ( file_url, err )
             elif response_message  == 'Rate exceeded for endpoint':  ## don't continue; stop until cron re-initiates
-                message = 'found response "%s"; raising Exception' % response_message
+                message = 'found response "%s"; will exit script' % response_message
                 # log.error( message )
                 # raise Exception( message )
                 log.warning( message )
