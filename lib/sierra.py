@@ -1,6 +1,8 @@
 import json, logging, os, sys, time
 import requests
 from requests.auth import HTTPBasicAuth
+from requests.exceptions import ReadTimeout as requests_ReadTimeout
+
 
 logging.basicConfig(
     filename=os.environ['SBE__LOG_PATH'],
@@ -41,21 +43,40 @@ class MarcHelper( object ):
             log.error( message )
             raise Exception( message )
 
+    # def make_bibrange_request( self, token, next_batch ):
+    #     """ Forms and executes the bib-range query.
+    #         Called by controller.download_file() """
+    #     start_bib = next_batch['chunk_start_bib']
+    #     end_bib = next_batch['chunk_end_bib'] if self.chunk_number_of_bibs is None else start_bib + self.chunk_number_of_bibs
+    #     marc_url = '%sbibs/marc' % self.API_ROOT_URL
+    #     payload = { 'id': '[%s,%s]' % (start_bib, end_bib), 'limit': (end_bib - start_bib) + 1, 'mapping': 'toc' }
+    #     log.debug( 'payload, ```%s```' % payload )
+    #     custom_headers = {'Authorization': 'Bearer %s' % token }
+    #     r = requests.get( marc_url, headers=custom_headers, params=payload, timeout=30 )
+    #     ( file_url, err ) = self.assess_bibrange_response( r )
+    #     log.debug( 'returning file_url, ```%s```' % file_url )
+    #     log.debug( 'returning err, ```%s```' % err )
+    #     return ( file_url, err )
+
     def make_bibrange_request( self, token, next_batch ):
         """ Forms and executes the bib-range query.
-            Called by controller.download_file() """
+            Called by controller.download_file()
+            Note: halting script execution is a normal part of the operation of this code. """
         start_bib = next_batch['chunk_start_bib']
         end_bib = next_batch['chunk_end_bib'] if self.chunk_number_of_bibs is None else start_bib + self.chunk_number_of_bibs
         marc_url = '%sbibs/marc' % self.API_ROOT_URL
         payload = { 'id': '[%s,%s]' % (start_bib, end_bib), 'limit': (end_bib - start_bib) + 1, 'mapping': 'toc' }
         log.debug( 'payload, ```%s```' % payload )
         custom_headers = {'Authorization': 'Bearer %s' % token }
-        r = requests.get( marc_url, headers=custom_headers, params=payload, timeout=30 )
+        try:
+            r = requests.get( marc_url, headers=custom_headers, params=payload, timeout=30 )
+        except requests_ReadTimeout:
+            log.warning( 'requests-ReadTimeout; will exit script' )
+            sys.exit()
         ( file_url, err ) = self.assess_bibrange_response( r )
         log.debug( 'returning file_url, ```%s```' % file_url )
         log.debug( 'returning err, ```%s```' % err )
         return ( file_url, err )
-
 
     # def assess_bibrange_response( self, r ):
     #     """ Analyzes bib-range response.
@@ -114,7 +135,6 @@ class MarcHelper( object ):
     #         message = 'unhandled status code, `%s`; raising Exception' % r.status_code
     #         log.error( message )
     #         raise Exception( message )
-
 
     def assess_bibrange_response( self, r ):
         """ Analyzes bib-range response.
