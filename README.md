@@ -1,3 +1,6 @@
+[![code-best-practices image](https://library.brown.edu/good_code/project_image/sierra-big-exports/)](https://library.brown.edu/good_code/project_info/sierra-big-exports/)
+
+
 Sierra MARC full-exports
 ========================
 
@@ -41,11 +44,13 @@ The full set of marc records are exported from Sierra twice a week. There are fo
 
 #### Notes
 
-- This code is used by...
-    - new-Josiah
-        - A fifth step occurs: The processing of the marc-files to extract updates. This is currently accomplished via old code in a private repostory. Those 'update-marc-files' are saved into a directory where a final sixth step occurs. Ruby traject code (in a separate repository) processes each of the update-marc-files, flowing extracted data into solr.
+- The output of this code is used by...
+    - [Josiah](https://search.library.brown.edu)
+        - A fifth step occurs: The processing of the marc-files to extract updates. This is currently accomplished via old code in a private repostory. Those 'update-marc-files' are saved into a directory where a final sixth step occurs. Ruby [traject code](https://github.com/Brown-University-Library/bul-traject) processes each of the update-marc-files, flowing extracted data into solr.
     - tech-services reports ([code](https://github.com/birkin/ts_reporting_project))
         - A cron script triggers code that runs through these marc-files and updates db tables for the web-app.
+    - [new-titles](https://library.brown.edu/titles/)
+        - A cron script triggers code that runs through 'updates' from these marc-files and updates db tables for the web-app.
 
 Back to this code...
 
@@ -53,7 +58,7 @@ Back to this code...
 
 - The net effect of this is that after a bunch of files are created/downloaded, the script can run for about five minutes before rate-limiting kicks in.
 
-- The low-tech solution to this that's working is to have the script triggered by cron every 10 minutes during the expected marc-export time-frame, and have each triggered-process run until either rate-limiting kicks in, or until five minutes passes, whichever occurs first.
+- The low-tech solution to this, that's working in production, is to have the script triggered by cron every 10 minutes during the expected marc-export time-frame, and have each triggered-process run until either rate-limiting kicks in, or until five minutes passes, whichever occurs first.
 
 - The tracker-handling is thus useful for two reasons:
     - For development, or for possible troubleshooting, processing can pick up where it left off easily.
